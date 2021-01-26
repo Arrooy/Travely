@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:travely/utils.dart';
+
 class Video{
   final String url;
   final int height;
@@ -28,8 +29,6 @@ class Video{
       // then throw an exception.
       throw Exception('Failed to load song');
     }
-
-
   }
 
   static Future<List<Video>> queryVideos(String query) async{
@@ -40,22 +39,39 @@ class Video{
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-
+      int selectedHeight = 0;
+      bool firstVideo = true;
       var json = jsonDecode(response.body);
       for (var vid in json["videos"]){
 
         Video biggestVideo;
+
         for (var options in vid["video_files"]){
+
+          // if(firstVideo){
+          //
+          // }
+
           if(biggestVideo == null){
-            biggestVideo = new Video(options["link"], options["width"], options["height"]);
-          }else{
-            if(options["height"] != null && options["height"] > biggestVideo.height){
+            if(selectedHeight == 0){
+              selectedHeight = options["height"];
+              biggestVideo = new Video(options["link"], options["width"], options["height"]);
+            }else{
+              if(selectedHeight == options["height"]){
                 biggestVideo = new Video(options["link"], options["width"], options["height"]);
+              }
+            }
+
+          }else{
+            if(options["height"] != null){
+                if(options["height"] == selectedHeight){
+                  biggestVideo = new Video(options["link"], options["width"], options["height"]);
+                }
             }
           }
         }
-        print("Adding video");
-        print(biggestVideo);
+        firstVideo = false;
+
         result.add(biggestVideo);
       }
       return result;

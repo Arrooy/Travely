@@ -22,7 +22,7 @@ class Travely extends StatelessWidget {
         // appBar: AppBar(
         //   title: Text('Welcome to Flutter'),
         // ),
-        body: BackgroundVideo("Vacation  Traveling")
+        body: BackgroundVideo("Vacation Travel Traveling Hot")
       ),
     );
   }
