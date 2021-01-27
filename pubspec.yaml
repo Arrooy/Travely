@@ -39,11 +39,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/videos/demo.mp4
-    - assets/videos/demo2.mp4
-    - assets/videos/demo3.mp4
-    - assets/videos/demo4.mp4
-
+    - assets/videos/firstVideo.mp4
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

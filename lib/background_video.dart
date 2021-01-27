@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:travely/utils.dart';
 
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 
 import 'model/video.dart';
-import 'dart:math';
 
 class BackgroundVideo extends StatefulWidget {
-  final String _firstVideoName = "assets/videos/demo4.mp4";
+  final String _firstVideoName = "assets/videos/firstVideo.mp4";
   final String _videoQuery;
 
   BackgroundVideo(this._videoQuery);
@@ -21,19 +21,19 @@ class BackgroundVideo extends StatefulWidget {
 }
 
 class _BackgroundVideoState extends State<BackgroundVideo> {
-  VideoPlayerController _videoPlayerController;
-  VideoPlayerController _videoPlayerController1;
-  VideoPlayerController _currentController;
+  ChewieController _chewieController;
 
+  VideoPlayerController _currentController;
   VideoPlayerController _nextVideoPlayerController;
 
-  ChewieController _chewieController;
   List<Video> _videos;
+
+  VoidCallback _listener;
 
   bool _oneTime = true;
   bool _oneSwap = true;
-  VoidCallback _listener;
   int _currentVideoIndex = -1;
+
   @override
   void initState() {
     initializeVideos();
@@ -43,8 +43,10 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
         print("Chewie Controller disposed!");
       }
 
-      vpc.pause();
-      vpc.seekTo(const Duration());
+      if(vpc != null) {
+        vpc.pause();
+        vpc.seekTo(const Duration());
+      }
 
       _chewieController = ChewieController(
           videoPlayerController: vpc,
@@ -69,12 +71,12 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
         // Si intentem carregar el segon video sense tenirlo buffered, fem excepcio.
         if (_videos == null) throw Exception('Failed to load song');
 
-        vpc = VideoPlayerController.network(_videos[videoIndex].url);
+        vpc = VideoPlayerController.network(_videos[videoIndex].url[0]);
 
         await vpc.initialize();
 
         print("Network video $videoIndex is ready! Url is " +
-            _videos[videoIndex].url);
+            _videos[videoIndex].url[0]);
         vpc.setVolume(0.0);
       }
 
@@ -120,7 +122,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
 
             _currentController = _nextVideoPlayerController;
             setState(() {
-              _currentVideoIndex = videoIndex;
+              _currentVideoIndex = videoIndex + 1;
             });
 
             _oneSwap = true;
@@ -150,24 +152,42 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
     _currentController = await widget.createController(-1);
     await widget.swapChewieController(_currentController);
 
-    _chewieController.seekTo(Duration(seconds: 15));
     setState(() {});
+  }
+
+  double calculateScaleFactor(int videoWidth, int videoHeight){
+    double phoneWidth  = getPhoneWidth(context);
+    double phoneHeight = getPhoneHeight(context);
+    double scaleFactorW = 1;
+    double scaleFactorH = 1;
+
+    if(videoHeight < phoneHeight){
+      //S'ha de fer scaling vertical
+      scaleFactorH = phoneHeight / videoHeight;
+    }
+
+    if(videoWidth < phoneWidth){
+      // S'ha de fer scaling horitzontal
+      scaleFactorW = phoneWidth / videoWidth;
+    }
+
+    // Retorna el scaling més restrictiu
+    return scaleFactorH > scaleFactorW ? scaleFactorH : scaleFactorW;
   }
 
   @override
   Widget build(BuildContext context) {
-    //double vh = _currentVideoIndex == -1 ? 1920.0 : _videos[_currentVideoIndex].height.toDouble();
-    double vh = 1920.0;
 
-    var padding = MediaQuery.of(context).padding;
-    double height = MediaQuery.of(context).size.height *
-            MediaQuery.of(context).devicePixelRatio -
-        padding.top -
-        padding.bottom;
+    double scaleFactor = 1;
 
-    print(
-        "Height is $height.  Video number $_currentVideoIndex has height $vh");
-    double scaleFactor = height / vh;
+    if(_chewieController != null )
+    scaleFactor = calculateScaleFactor(_chewieController.videoPlayerController.value.size.width.toInt(), _chewieController.videoPlayerController.value.size.height.toInt());
+
+
+    if(_currentVideoIndex != -1){
+      if(_chewieController.videoPlayerController.value.size.width.toInt() != _videos[_currentVideoIndex].width || _chewieController.videoPlayerController.value.size.height.toInt() != _videos[_currentVideoIndex].height)
+        throw Exception("Chewie controller video size is diferent from API size.");
+    }
 
     return _chewieController != null &&
             _chewieController.videoPlayerController.value.initialized

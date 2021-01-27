@@ -32,3 +32,12 @@ final String pexelToken = "563492ad6f91700001000001e69ed8ad08eb4d24867553648a952
 //     }
 //
 // }
+
+double getPhoneWidth(BuildContext context){
+  return MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio;
+}
+
+double getPhoneHeight(BuildContext context){
+  final padding = MediaQuery.of(context).padding;
+  return MediaQuery.of(context).size.height * MediaQuery.of(context).devicePixelRatio - padding.top - padding.bottom;
+}
