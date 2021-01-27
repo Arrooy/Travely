@@ -4,12 +4,26 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:travely/utils.dart';
 
+//Guarda per un mateix video, varies resoluccions amb el seu respectiu link.
 class Video{
-  final List<String> url;
-  final List<int> height;
-  final List<int> width;
+  List<String> url;
+  List<int> height;
+  List<int> width;
 
-  Video(this.url, this.width, this.height);
+  Video(String url, int width, int height){
+    add(url,width,height);
+  }
+
+  void add(String url, int width, int height){
+    this.url.add(url);
+    this.width.add(width);
+    this.height.add(height);
+  }
+
+  //Retorna la millor resolucio del video basant-se amb la mida del dispositiu.
+  Video getBestVideo(int width, int height){
+
+  }
 
   static Future<List<Video>> queryVideos(String query) async{
     final response = await http.get('https://api.pexels.com/videos/search?query=$query&per_page=20&orientation=portrait&size=medium',
@@ -19,27 +33,30 @@ class Video{
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
-      // then parse the JSON.
+      // then parse the JSON
 
       var json = jsonDecode(response.body);
 
       for (var vid in json["videos"]){
-        print("Video w and h is " + vid["width"].toString() + " " + vid["height"].toString());
-        print("Showing options:");
-        Video biggestVideo;
+        // print("Video w and h is " + vid["width"].toString() + " " + vid["height"].toString());
+        // print("Showing options:");
+
+        Video newVideo;
+
         for (var options in vid["video_files"]){
           print("Option: " + options["width"].toString() + " " + options["height"].toString());
-          if(biggestVideo == null){
-            biggestVideo = new Video(options["link"], options["width"], options["height"]);
+          if(newVideo == null){
+            newVideo = new Video(options["link"], options["width"], options["height"]);
           }else{
-            if(options["height"] != null && options["height"] > biggestVideo.height){
-              biggestVideo = new Video(options["link"], options["width"], options["height"]);
+
+            if(options["height"] != null){
+              newVideo.add(options["link"], options["width"], options["height"]);
             }
           }
 
         }
-        print("Selected video is " + biggestVideo.toString());
-        result.add(biggestVideo);
+        print("Selected video is " + newVideo.toString());
+        result.add(newVideo);
       }
       return result;
     } else {
