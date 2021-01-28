@@ -7,6 +7,10 @@ import 'package:chewie/chewie.dart';
 
 import 'model/video.dart';
 
+//Per a la imatge.
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
+
 class BackgroundVideo extends StatefulWidget {
   final String _firstVideoName = "assets/videos/firstVideo.mp4";
   final String _videoQuery;
@@ -30,6 +34,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
 
   VoidCallback _listener;
 
+
   bool _oneTime = true;
   bool _oneSwap = true;
   int _currentVideoIndex = -1;
@@ -37,27 +42,20 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   int _phoneWidth = 0;
   int _phoneHeight = 0;
 
+  bool _videoReady = false;
+
   @override
   void initState() {
     initializeVideos();
     widget.swapChewieController = (VideoPlayerController vpc) async {
-      if (_chewieController != null) {
-        _chewieController.dispose();
-        print("Chewie Controller disposed!");
-      }
 
-      if(vpc != null) {
-        vpc.pause();
-        vpc.seekTo(const Duration());
-      }
-
-      _chewieController = ChewieController(
-          videoPlayerController: vpc,
-          autoPlay: true,
-          showControls: false,
-          placeholder: Container(
-            color: Colors.red,
-          ));
+    _chewieController = ChewieController(
+        videoPlayerController: vpc,
+        autoPlay: true,
+        showControls: false,
+        placeholder: Container(
+          color: Colors.red,
+        ));
 
       _oneTime = true;
     };
@@ -76,14 +74,14 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
 
         String url = _videos[videoIndex].getBestVideo(_phoneWidth, _phoneHeight);
 
-        print("Network video $videoIndex is about to load! Its size is " + _videos[videoIndex].getSelectedWidth().toString() + " - " + _videos[videoIndex].getSelectedHeight().toString() + "Url is " +
-            _videos[videoIndex].getSelectedUrl());
-        print("Its options are:" + _videos[videoIndex].width.toString()+ _videos[videoIndex].height.toString());
+        // print("Network video $videoIndex is about to load! Its size is " + _videos[videoIndex].selectedWidth.toString() + " - " + _videos[videoIndex].selectedHeight.toString() + "Url is " +
+        //     _videos[videoIndex].selectedUrl);
+        // print("Its options are:" + _videos[videoIndex].width.toString()+ _videos[videoIndex].height.toString());
 
         if(url == ""){
           //No s'ha trobat un video adient.
-          if(videoIndex + 1 >= _videos.length)videoIndex = -1;
-
+          if(videoIndex + 1 >= _videos.length)videoIndex = -2;
+          // Es reprodueix el primer video (Asset).
           return await widget.createController(videoIndex + 1);
         }
 
@@ -104,7 +102,6 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
           print("Current controller es null! returning.");
           return;
         }
-
         // Crea el seguent controlador (buffering del seguent video).
         // Evitem carregar el seguent video durant el primer segon de reproduccio
         // (Per evitar cridar createController abans de que aquest sigui definit.)
@@ -112,12 +109,15 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
             _oneTime &&
             _currentController.value.position > Duration(seconds: 1)) {
           _oneTime = false;
-          print(
-              "Inside listener. Ja hi han els videos. Creant next controller...");
+          print("Inside listener. Ja hi han els videos. Creant next controller...");
+          try{
+            if (videoIndex + 1 >= _videos.length) videoIndex = -2;
+            _nextVideoPlayerController = await widget.createController(videoIndex + 1);
 
-          if (videoIndex + 1 >= _videos.length) videoIndex = -1;
-          _nextVideoPlayerController =
-              await widget.createController(videoIndex + 1);
+          }catch(error) {
+            print("Fallback. Reproduint el primer video");
+            _nextVideoPlayerController = await widget.createController(-1);
+          }
         }
 
         if (_currentController.value.position >=
@@ -129,14 +129,13 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
 
           if (_oneSwap) {
             _oneSwap = false;
+            _videoReady = false;
+            print("Inside listener. S'ha acabat el video, fent swap amb el controlador antic. Soc index $videoIndex");
 
-            print(
-                "Inside listener. S'ha acabat el video, fent swap amb el controlador antic. Soc index $videoIndex");
 
-            await widget.swapChewieController(_nextVideoPlayerController);
-
-            _currentController = _nextVideoPlayerController;
+            //Posem a null el controlador per a no tenir problemes amb el dispose.
             setState(() {
+
               _currentVideoIndex = videoIndex + 1;
             });
 
@@ -150,7 +149,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
       return vpc;
     };
     initializePlayer();
-    //
+
     super.initState();
   }
 
@@ -167,7 +166,9 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
     _currentController = await widget.createController(-1);
     await widget.swapChewieController(_currentController);
 
-    setState(() {});
+    setState(() {
+      _videoReady = true;
+    });
   }
 
   double calculateScaleFactor(int videoWidth, int videoHeight){
@@ -197,38 +198,54 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
 
     double scaleFactor = 1;
 
-    if(_chewieController != null )
-    scaleFactor = calculateScaleFactor(_chewieController.videoPlayerController.value.size.width.toInt(), _chewieController.videoPlayerController.value.size.height.toInt());
+    if(_chewieController != null)
+      scaleFactor = calculateScaleFactor(_chewieController.videoPlayerController.value.size.width.toInt(), _chewieController.videoPlayerController.value.size.height.toInt());
 
-    if(_currentVideoIndex != -1){
-      if(_chewieController.videoPlayerController.value.size.width.toInt() != _videos[_currentVideoIndex].getSelectedWidth() || _chewieController.videoPlayerController.value.size.height.toInt() != _videos[_currentVideoIndex].getSelectedHeight())
-        throw Exception("Chewie controller video size is diferent from API size.");
-    }
+    return AnimatedOpacity(
+      opacity: _videoReady ? 1.0 : 0.0,
+      duration: Duration(milliseconds: 200),
 
-    return _chewieController != null &&
-            _chewieController.videoPlayerController.value.initialized
-        ? Center(
-            child: Transform.scale(
-                origin: Offset(0.0, 0.0),
-                scale:scaleFactor,
-                child: Chewie(controller: _chewieController)))
-        : Container(
-            color: Colors.white,
-          );
-    // : Center(
-    //     child: Column(
-    //     mainAxisAlignment: MainAxisAlignment.center,
-    //     children: const [
-    //       CircularProgressIndicator(),
-    //       SizedBox(height: 20),
-    //       Text('Loading'),
-    //     ],
-    //   ));
+          onEnd: (){
+            if(!_videoReady) {
+
+              //S'ha acabat d'amagar el video, ja podem fer el swap de video.
+              final oldController = _currentController;
+              final oldChewie = _chewieController;
+
+              //El seguent frame actualitzem el video borrant el anterior.
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                await oldController.dispose();
+                oldChewie.dispose();
+                // Initing new controller
+                await widget.swapChewieController(_nextVideoPlayerController);
+                _currentController = _nextVideoPlayerController;
+                _chewieController.pause();
+                // Mostrem el seguent video amb un fadeIn
+                setState(() {
+                 _videoReady = true;
+                });
+              });
+
+              setState(() {
+                _currentController = null;
+                _chewieController = null;
+              });
+            }else{
+              _chewieController.play();
+            }
+          },
+          child: Center(
+          child: _chewieController != null &&
+              _chewieController.videoPlayerController.value.initialized ? Transform.scale(
+              origin: Offset(0.0, 0.0),
+              scale:scaleFactor,
+              child: Chewie(controller: _chewieController)) : Container(color: Colors.white)),
+    );
   }
 
   @override
-  void dispose() {
-    _currentController.dispose();
+  void dispose() async {
+    await _currentController.dispose();
     _chewieController.dispose();
 
     super.dispose();

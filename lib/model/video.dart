@@ -10,6 +10,9 @@ class Video {
   List<String> url;
   List<int> height;
   List<int> width;
+
+  String _firstFrameImage;
+
   int selectedVideo;
 
   Video(String url, int width, int height) {
@@ -35,16 +38,15 @@ class Video {
     int minIndex = -1;
     for (var i = 0; i < url.length; i++) {
       double distance = sqrt(pow(width - this.width[i], 2) + pow(height - this.height[i], 2));
-      print("Getting best video. video size: " + this.width[i].toString() + " " + this.height[i].toString() + " Distance is $distance");
+
       if (distance < minDistance) {
         // Tallem la iteració si ja hem trobat al candidat perfecte.
         if (distance == 0) {
           selectedVideo = i;
-          print("SELECTED! Distance is "  + distance.toString());
           return this.url[i];
         }
         //De lo contrari, nomes el guardem si la mida es inferior a la de la pantalla
-        if(width > this.width[i] && height > this.height[i]) {
+        if(width >= this.width[i] && height >= this.height[i]) {
           minDistance = distance;
           minIndex = i;
         }
@@ -56,24 +58,17 @@ class Video {
       return "";
     }
 
-    print("SELECTED! Distance is "  + sqrt(pow(width - this.width[minIndex], 2) + pow(height - this.height[minIndex], 2)).toString());
-
     selectedVideo = minIndex;
     // Retornem el millor candidat trobat.
     return this.url[minIndex];
   }
 
-  int getSelectedWidth() {
-    return this.width[selectedVideo];
-  }
+  set preview(String url) => this._firstFrameImage = url;
 
-  int getSelectedHeight() {
-    return this.height[selectedVideo];
-  }
-
-  String getSelectedUrl() {
-    return this.url[selectedVideo];
-  }
+  int get selectedWidth => this.width[selectedVideo];
+  int get selectedHeight => this.height[selectedVideo];
+  String get selectedUrl => this.url[selectedVideo];
+  String get preview => this._firstFrameImage;
 
   static Future<List<Video>> queryVideos(String query) async {
     final response = await http.get(
@@ -89,6 +84,7 @@ class Video {
 
       for (var vid in json["videos"]) {
         Video newVideo;
+
         for (var options in vid["video_files"]) {
 
           if (newVideo == null) {
@@ -101,6 +97,7 @@ class Video {
             }
           }
         }
+        newVideo.preview = vid["video_pictures"][0]["picture"];
         result.add(newVideo);
       }
       return result;

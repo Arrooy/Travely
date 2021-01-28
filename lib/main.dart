@@ -18,7 +18,7 @@ class Travely extends StatelessWidget {
   Widget build(BuildContext context) {
     try {
       BackgroundVideo backgroundVideo = BackgroundVideo(
-          "Vacation Travel Traveling Hot");
+          "Short");
 
       return MaterialApp(
         title: 'Travely',
@@ -26,7 +26,8 @@ class Travely extends StatelessWidget {
           // appBar: AppBar(
           //   title: Text('Welcome to Flutter'),
           // ),
-          body: backgroundVideo
+          body: backgroundVideo,
+              backgroundColor: Colors.white,
         ),
       );
     }catch(error){
