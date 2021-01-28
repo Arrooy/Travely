@@ -16,14 +16,21 @@ class Travely extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Travely',
-      home: Scaffold(
-        // appBar: AppBar(
-        //   title: Text('Welcome to Flutter'),
-        // ),
-        body: BackgroundVideo("Vacation Travel Traveling Hot")
-      ),
-    );
+    try {
+      BackgroundVideo backgroundVideo = BackgroundVideo(
+          "Vacation Travel Traveling Hot");
+
+      return MaterialApp(
+        title: 'Travely',
+        home: Scaffold(
+          // appBar: AppBar(
+          //   title: Text('Welcome to Flutter'),
+          // ),
+          body: backgroundVideo
+        ),
+      );
+    }catch(error){
+      print("ESCALATED TO MAIN!");
+    }
   }
 }

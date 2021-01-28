@@ -34,6 +34,9 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   bool _oneSwap = true;
   int _currentVideoIndex = -1;
 
+  int _phoneWidth = 0;
+  int _phoneHeight = 0;
+
   @override
   void initState() {
     initializeVideos();
@@ -69,14 +72,26 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
         vpc.setVolume(0.0);
       } else {
         // Si intentem carregar el segon video sense tenirlo buffered, fem excepcio.
-        if (_videos == null) throw Exception('Failed to load song');
+        if (_videos == null) throw Exception('Failed to load api videos in time.');
 
-        vpc = VideoPlayerController.network(_videos[videoIndex].url[0]);
+        String url = _videos[videoIndex].getBestVideo(_phoneWidth, _phoneHeight);
 
+        print("Network video $videoIndex is about to load! Its size is " + _videos[videoIndex].getSelectedWidth().toString() + " - " + _videos[videoIndex].getSelectedHeight().toString() + "Url is " +
+            _videos[videoIndex].getSelectedUrl());
+        print("Its options are:" + _videos[videoIndex].width.toString()+ _videos[videoIndex].height.toString());
+
+        if(url == ""){
+          //No s'ha trobat un video adient.
+          if(videoIndex + 1 >= _videos.length)videoIndex = -1;
+
+          return await widget.createController(videoIndex + 1);
+        }
+
+        // Si que hi ha una resolucio correcte
+        vpc = VideoPlayerController.network(url);
         await vpc.initialize();
 
-        print("Network video $videoIndex is ready! Url is " +
-            _videos[videoIndex].url[0]);
+        print("Network video $videoIndex is ready!");
         vpc.setVolume(0.0);
       }
 
@@ -156,21 +171,20 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   }
 
   double calculateScaleFactor(int videoWidth, int videoHeight){
-    double phoneWidth  = getPhoneWidth(context);
-    double phoneHeight = getPhoneHeight(context);
     double scaleFactorW = 1;
     double scaleFactorH = 1;
 
-    if(videoHeight < phoneHeight){
+    if(videoHeight < _phoneHeight){
       //S'ha de fer scaling vertical
-      scaleFactorH = phoneHeight / videoHeight;
+      scaleFactorH = _phoneHeight / videoHeight;
     }
 
-    if(videoWidth < phoneWidth){
+    if(videoWidth < _phoneWidth){
       // S'ha de fer scaling horitzontal
-      scaleFactorW = phoneWidth / videoWidth;
+      scaleFactorW = _phoneWidth / videoWidth;
     }
 
+    print("Phone size is $_phoneWidth - $_phoneHeight. Video size is $videoWidth - $videoHeight. The scale factor is $scaleFactorW - $scaleFactorH.");
     // Retorna el scaling més restrictiu
     return scaleFactorH > scaleFactorW ? scaleFactorH : scaleFactorW;
   }
@@ -178,14 +192,16 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   @override
   Widget build(BuildContext context) {
 
+    _phoneWidth = getPhoneWidth(context).toInt();
+    _phoneHeight = getPhoneHeight(context).toInt();
+
     double scaleFactor = 1;
 
     if(_chewieController != null )
     scaleFactor = calculateScaleFactor(_chewieController.videoPlayerController.value.size.width.toInt(), _chewieController.videoPlayerController.value.size.height.toInt());
 
-
     if(_currentVideoIndex != -1){
-      if(_chewieController.videoPlayerController.value.size.width.toInt() != _videos[_currentVideoIndex].width || _chewieController.videoPlayerController.value.size.height.toInt() != _videos[_currentVideoIndex].height)
+      if(_chewieController.videoPlayerController.value.size.width.toInt() != _videos[_currentVideoIndex].getSelectedWidth() || _chewieController.videoPlayerController.value.size.height.toInt() != _videos[_currentVideoIndex].getSelectedHeight())
         throw Exception("Chewie controller video size is diferent from API size.");
     }
 
