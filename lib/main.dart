@@ -1,6 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:travely/map.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:travely/background_video.dart';
@@ -18,7 +19,7 @@ class Travely extends StatelessWidget {
   Widget build(BuildContext context) {
     try {
       BackgroundVideo backgroundVideo = BackgroundVideo(
-          "Short");
+          "trending");
 
       return MaterialApp(
         title: 'Travely',
@@ -26,7 +27,7 @@ class Travely extends StatelessWidget {
           // appBar: AppBar(
           //   title: Text('Welcome to Flutter'),
           // ),
-          body: backgroundVideo,
+          body: TravelyMaps(),
               backgroundColor: Colors.white,
         ),
       );
