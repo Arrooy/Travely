@@ -54,6 +54,7 @@ class _LogInScreenState extends State<LogInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset : false,
       body: Stack(children: [
         backgroundVideo,
         TlyLogin(),
