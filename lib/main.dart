@@ -2,6 +2,7 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:travely/map.dart';
+import 'package:travely/ui_utils.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:travely/background_video.dart';
@@ -9,14 +10,15 @@ import 'package:flutter/services.dart';
 
 import 'package:travely/home.dart';
 
+import 'model/login.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIOverlays ([]);
+  SystemChrome.setEnabledSystemUIOverlays([]);
   runApp(Travely());
 }
 
 class Travely extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
 
@@ -39,6 +41,7 @@ class Travely extends StatelessWidget {
 
   }
 }
+
 class LogInScreen extends StatefulWidget {
 
   @override
@@ -53,6 +56,7 @@ class _LogInScreenState extends State<LogInScreen> {
     return Scaffold(
       body: Stack(children: [
         backgroundVideo,
+        TlyLogin(),
         RaisedButton(onPressed: (){
           Navigator.pushReplacementNamed(context, '/home');
         },
