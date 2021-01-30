@@ -17,15 +17,15 @@ class BackgroundVideo extends StatefulWidget {
 
   BackgroundVideo(this._videoQuery);
 
-  Future<VideoPlayerController> Function(int) createController;
-  Future<void> Function(VideoPlayerController) swapChewieController;
-
   @override
   _BackgroundVideoState createState() => _BackgroundVideoState();
 }
 
 class _BackgroundVideoState extends State<BackgroundVideo> {
   ChewieController _chewieController;
+
+  Future<VideoPlayerController> Function(int) createController;
+  Future<void> Function(VideoPlayerController) swapChewieController;
 
   VideoPlayerController _currentController;
   VideoPlayerController _nextVideoPlayerController;
@@ -47,7 +47,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   @override
   void initState() {
     initializeVideos();
-    widget.swapChewieController = (VideoPlayerController vpc) async {
+    swapChewieController = (VideoPlayerController vpc) async {
 
     _chewieController = ChewieController(
         videoPlayerController: vpc,
@@ -60,7 +60,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
       _oneTime = true;
     };
 
-    widget.createController = (int videoIndex) async {
+    createController = (int videoIndex) async {
       VideoPlayerController vpc;
       print("Creating controller with index " + videoIndex.toString());
 
@@ -82,7 +82,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
           //No s'ha trobat un video adient.
           if(videoIndex + 1 >= _videos.length)videoIndex = -2;
           // Es reprodueix el primer video (Asset).
-          return await widget.createController(videoIndex + 1);
+          return await createController(videoIndex + 1);
         }
 
         // Si que hi ha una resolucio correcte
@@ -112,11 +112,11 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
           print("Inside listener. Ja hi han els videos. Creant next controller...");
           try{
             if (videoIndex + 1 >= _videos.length) videoIndex = -2;
-            _nextVideoPlayerController = await widget.createController(videoIndex + 1);
+            _nextVideoPlayerController = await createController(videoIndex + 1);
 
           }catch(error) {
             print("Fallback. Reproduint el primer video");
-            _nextVideoPlayerController = await widget.createController(-1);
+            _nextVideoPlayerController = await createController(-1);
           }
         }
 
@@ -163,8 +163,8 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   Future<void> initializePlayer() async {
     // Inicialment reproduim un video desde la memoria per accelerar l'app.
     // Amb -1 indiquem que s'ha de reproduir el video local.
-    _currentController = await widget.createController(-1);
-    await widget.swapChewieController(_currentController);
+    _currentController = await createController(-1);
+    await swapChewieController(_currentController);
 
     setState(() {
       _videoReady = true;
@@ -217,7 +217,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
                 await oldController.dispose();
                 oldChewie.dispose();
                 // Initing new controller
-                await widget.swapChewieController(_nextVideoPlayerController);
+                await swapChewieController(_nextVideoPlayerController);
                 _currentController = _nextVideoPlayerController;
                 _chewieController.pause();
                 // Mostrem el seguent video amb un fadeIn
@@ -244,10 +244,9 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   }
 
   @override
-  void dispose() async {
-    await _currentController.dispose();
+  void dispose() {
+    _currentController.dispose();
     _chewieController.dispose();
-
     super.dispose();
   }
 }

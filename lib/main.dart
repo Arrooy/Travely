@@ -7,6 +7,8 @@ import 'package:video_player/video_player.dart';
 import 'package:travely/background_video.dart';
 import 'package:flutter/services.dart';
 
+import 'package:travely/home.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIOverlays ([]);
@@ -17,22 +19,51 @@ class Travely extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    try {
-      BackgroundVideo backgroundVideo = BackgroundVideo(
-          "trending");
 
-      return MaterialApp(
-        title: 'Travely',
-        home: Scaffold(
-          // appBar: AppBar(
-          //   title: Text('Welcome to Flutter'),
-          // ),
-          body: TravelyMaps(),
-              backgroundColor: Colors.white,
-        ),
-      );
-    }catch(error){
-      print("ESCALATED TO MAIN!");
-    }
+    return MaterialApp(
+      title: 'Travely',
+      theme:  new ThemeData(
+
+      brightness: Brightness.dark,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.red,
+        splashColor: Colors.redAccent
+      ),
+    ),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => LogInScreen(),
+          '/home': (context) => Home(),
+        });
+
+  }
+}
+class LogInScreen extends StatefulWidget {
+
+  @override
+  _LogInScreenState createState() => _LogInScreenState();
+}
+
+class _LogInScreenState extends State<LogInScreen> {
+  BackgroundVideo backgroundVideo = BackgroundVideo(
+      "fun");
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(children: [
+        backgroundVideo,
+        RaisedButton(onPressed: (){
+          Navigator.pushReplacementNamed(context, '/home');
+        },
+          child: Text("Enter Home"),)
+      ],),
+      backgroundColor: Colors.white,
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
