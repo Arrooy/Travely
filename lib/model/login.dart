@@ -8,8 +8,8 @@ class TlyLogin extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          TlyForm(null, "Username", false),
-          TlyForm(null, "Password", true),
+          TlyForm(Icons.person, "Username", false),
+          TlyForm(Icons.lock, "Password", true),
           TlyButton("Sign In"),
         ],
       ),

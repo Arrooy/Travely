@@ -53,9 +53,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
         videoPlayerController: vpc,
         autoPlay: true,
         showControls: false,
-        placeholder: Container(
-          color: Colors.red,
-        ));
+        placeholder: Container());
 
       _oneTime = true;
     };

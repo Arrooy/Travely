@@ -23,6 +23,7 @@ dependencies:
   google_maps_flutter: ^1.1.1
   google_place: ^0.3.3
   google_fonts: ^1.1.2
+  geolocator: ^6.1.14
 
 dev_dependencies:
   flutter_test:

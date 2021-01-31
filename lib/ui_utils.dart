@@ -53,7 +53,7 @@ class TlyForm extends StatelessWidget {
               obscureText: isPassword,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                  icon: Icon(
+                  prefixIcon: Icon(
                     icon,
                     color: Colors.white,
                   ),
@@ -67,4 +67,16 @@ class TlyForm extends StatelessWidget {
           ),
         ));
   }
+}
+
+
+Widget snackBar(String message, String button, BuildContext context, Function onPressed) {
+
+  return SnackBar(
+    content: Text(message),
+    action: SnackBarAction(
+        label: button,
+        onPressed: () => onPressed
+    ),
+  );
 }
