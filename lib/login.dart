@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:travely/ui_utils.dart';
 
 class TlyLogin extends StatelessWidget {
-
-  TlyLogin({Function onPressed});
+  final Function onPressed;
+  TlyLogin({this.onPressed});
 
   Widget build(BuildContext buildContext){
     return Center(
@@ -17,7 +17,7 @@ class TlyLogin extends StatelessWidget {
           TlyForm(Icons.person, "Username", false),
           TlyForm(Icons.lock, "Password", true),
           Spacer(flex: 1,),
-          TlyButton("Sign In"),
+          TlyButton("Sign In",this.onPressed),
           Spacer(flex: 2,),
         ],
       ),

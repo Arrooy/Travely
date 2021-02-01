@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 
 class TlyButton extends StatelessWidget {
   final String text;
-  const TlyButton(this.text);
+  final Function onPressed;
+  const TlyButton(this.text, [this.onPressed]);
 
   @override
   Widget build(BuildContext buildContext) {
     return Padding(
       padding: EdgeInsets.all(10),
       child: GestureDetector(
-          onTap: () => print("Button pressed"),
+          onTap: () => onPressed,
           child: Container(
               width: 200,
               height: 60.0,
