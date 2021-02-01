@@ -5,6 +5,7 @@ import 'package:travely/FABBottomAppBar.dart';
 import 'package:travely/AnimatedFab.dart';
 
 import 'package:google_place/google_place.dart';
+import 'file:///C:/Users/Arroy/StudioProjects/Travely/lib/model/LocationManager.dart';
 import 'package:travely/utils.dart';
 
 import 'package:google_fonts/google_fonts.dart';
@@ -18,9 +19,10 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Widget _animatedWidget = TrendingPage();
   int _lastPage = 0;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+     return Scaffold(
         appBar: AppBar(
           centerTitle: true,
           title: Text("Travely",
@@ -81,6 +83,7 @@ class _HomeState extends State<Home> {
 
   Function(int) _bottomBarPlaneButton(buttonIndex){
     // Boto de buscar vols
+
   }
 }
 /*

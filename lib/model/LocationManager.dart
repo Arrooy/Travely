@@ -59,8 +59,7 @@ class LocationManager {
   // Si l'usuari ha denegat l'acces, obra les opcions de la app.
   // Per a IOS no es pot fer aixo, directament s'obra settings.
   Future<void> openSettings() async {
-    print(await Geolocator.openAppSettings());
-    return;
+  
     if (!serviceEnabled) {
       await Geolocator.openLocationSettings();
     } else {
@@ -85,13 +84,12 @@ class LocationManager {
   }
 
   void _enterHome(BuildContext context, Function callback){
-    callback();
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushReplacementNamed(context, '/home',arguments: callback());
   }
 
   // S'encarreg d'obligar a l'usuari a activar el gps + acceptar localitzacio.
   // un cop tots els requisits son correctes, s'executa el callback
-  // i es navega a la ruta home.
+  // i es navega a la ruta home enviant com argument el resultat del callback!
   void mustHaveLocationDialogs(BuildContext context, Function callback) async {
 
     await init();
@@ -139,9 +137,9 @@ class LocationManager {
       // Donem opcio d'obrir settings.
         GenericDialog.showLocDialog(
             context,
-            "Travely needs you to accept",
-            "This app uses your location to suggest the best places to travel to.",
-            "Open permission dialog",(){openSettings();},popCallback: (){
+            "Travely needs location services",
+            "This app uses your location to suggest the best places to travel to.\n\nPlease activate the device location!",
+            "Open system settings",(){openSettings();},popCallback: (){
           Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please activate the device location!","Open dialog", context, () => mustHaveLocationDialogs(context,callback)));
         });
 

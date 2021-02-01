@@ -2,9 +2,11 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import 'package:travely/GenericDialog.dart';
-import 'package:travely/LocationManager.dart';
+import 'package:travely/model/LocationManager.dart';
 import 'package:travely/map.dart';
+import 'package:travely/model/LocationManager.dart';
 import 'package:travely/ui_utils.dart';
 import 'package:video_player/video_player.dart';
 
@@ -13,7 +15,7 @@ import 'package:flutter/services.dart';
 
 import 'package:travely/home.dart';
 
-import 'model/login.dart';
+import 'login.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,20 +34,25 @@ class Travely extends StatelessWidget {
           FocusManager.instance.primaryFocus.unfocus();
         }
       },
-      child: MaterialApp(
-          title: 'Travely',
-          theme: new ThemeData(
-            brightness: Brightness.dark,
-            floatingActionButtonTheme: FloatingActionButtonThemeData(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.red,
-                splashColor: Colors.redAccent),
-          ),
-          initialRoute: '/',
-          routes: {
-            '/': (context) => LogInScreen(),
-            '/home': (context) => Home(),
-          }),
+      child: MultiProvider(
+        providers: [
+          Provider(create: (context) => new LocationManager())
+        ],
+        child: MaterialApp(
+            title: 'Travely',
+            theme: new ThemeData(
+              brightness: Brightness.dark,
+              floatingActionButtonTheme: FloatingActionButtonThemeData(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                  splashColor: Colors.redAccent),
+            ),
+            initialRoute: '/',
+            routes: {
+              '/': (context) => LogInScreen(),
+              '/home': (context) => Home(),
+            }),
+      ),
     );
   }
 }
@@ -56,8 +63,9 @@ class LogInScreen extends StatefulWidget {
 }
 
 class _LogInScreenState extends State<LogInScreen> {
+
   BackgroundVideo backgroundVideo = BackgroundVideo("horror");
-  LocationManager _locManag = new LocationManager();
+
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -68,7 +76,7 @@ class _LogInScreenState extends State<LogInScreen> {
         key:_scaffoldKey,
         children: [
           backgroundVideo,
-          TlyLogin(),
+          TlyLogin( onPressed: () => _processSignIn(context)),
           Builder(
               builder: (context) => RaisedButton(
               onPressed: () {
@@ -84,14 +92,16 @@ class _LogInScreenState extends State<LogInScreen> {
   }
 
   void _processSignIn(BuildContext context) async{
+
     // Quidado es async. Tenir-ho en compte. Si tot es correcte, s'executa el callback
-    await _locManag.mustHaveLocationDialogs(context,() async{
-      Position position = await _locManag.getPosition(LocationAccuracy.medium);
+    LocationManager locationManager = Provider.of<LocationManager>(context, listen: false);
+
+    await locationManager.mustHaveLocationDialogs(context,() async{
+      Position position = await locationManager.getPosition(LocationAccuracy.medium);
       print("Current position is " + (position == null ? 'Unknown' : position.latitude.toString() + ', ' + position.longitude.toString()));
+      return locationManager;
     });
-
   }
-
 
   @override
   void dispose() {
