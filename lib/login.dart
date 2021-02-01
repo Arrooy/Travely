@@ -4,6 +4,9 @@ import 'package:travely/ui_utils.dart';
 
 class TlyLogin extends StatelessWidget {
   final Function onPressed;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
   TlyLogin({this.onPressed});
 
   Widget build(BuildContext buildContext){
@@ -14,14 +17,13 @@ class TlyLogin extends StatelessWidget {
           Spacer(flex: 2,),
           Image.asset("assets/images/logo.png"),
           Spacer(flex: 1,),
-          TlyForm(Icons.person, "Username", false),
-          TlyForm(Icons.lock, "Password", true),
+          TlyForm(Icons.person, "E-Mail", false, emailController),
+          TlyForm(Icons.lock, "Password", true, passwordController),
           Spacer(flex: 1,),
-          TlyButton("Sign In",this.onPressed),
+          TlyButton("Sign In", () => this.onPressed(context: buildContext, email: emailController.text.trim(), password: passwordController.text.trim())),
           Spacer(flex: 2,),
         ],
       ),
     );
   }
-
 }

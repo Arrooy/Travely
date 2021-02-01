@@ -5,7 +5,7 @@ import 'package:travely/FABBottomAppBar.dart';
 import 'package:travely/AnimatedFab.dart';
 
 import 'package:google_place/google_place.dart';
-import 'file:///C:/Users/Arroy/StudioProjects/Travely/lib/model/LocationManager.dart';
+import 'package:travely/model/LocationManager.dart';
 import 'package:travely/utils.dart';
 
 import 'package:google_fonts/google_fonts.dart';

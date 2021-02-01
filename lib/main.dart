@@ -1,9 +1,14 @@
+import 'dart:math';
 import 'package:chewie/chewie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/GenericDialog.dart';
+import 'package:travely/authentication_service.dart';
 import 'package:travely/model/LocationManager.dart';
 import 'package:travely/map.dart';
 import 'package:travely/model/LocationManager.dart';
@@ -17,9 +22,10 @@ import 'package:travely/home.dart';
 
 import 'login.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIOverlays([]);
+  await Firebase.initializeApp();
   runApp(Travely());
 }
 
@@ -36,22 +42,29 @@ class Travely extends StatelessWidget {
       },
       child: MultiProvider(
         providers: [
-          Provider(create: (context) => new LocationManager())
+          Provider(create: (context) => new LocationManager()),
+          Provider<AuthenticationService>(create: (_) => AuthenticationService(FirebaseAuth.instance)),
+          StreamProvider<User>(create: (context) => context.read<AuthenticationService>().authStateChanges)
         ],
-        child: MaterialApp(
-            title: 'Travely',
-            theme: new ThemeData(
-              brightness: Brightness.dark,
-              floatingActionButtonTheme: FloatingActionButtonThemeData(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.red,
-                  splashColor: Colors.redAccent),
-            ),
-            initialRoute: '/',
-            routes: {
-              '/': (context) => LogInScreen(),
-              '/home': (context) => Home(),
-            }),
+        child: Consumer<User> (
+          builder: (context, user, child) {
+            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+            print(user == null);
+            return MaterialApp(
+                title: 'Travely',
+                theme: new ThemeData(
+                  brightness: Brightness.dark,
+                  floatingActionButtonTheme: FloatingActionButtonThemeData(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.red,
+                      splashColor: Colors.redAccent),
+                ),
+                initialRoute: (user == null) ? '/' : '/home',
+                routes: {
+                  '/': (context) => LogInScreen(),
+                  '/home': (context) => Home(),
+                });
+          }),
       ),
     );
   }
@@ -63,38 +76,34 @@ class LogInScreen extends StatefulWidget {
 }
 
 class _LogInScreenState extends State<LogInScreen> {
-
-  BackgroundVideo backgroundVideo = BackgroundVideo("horror");
-
+  BackgroundVideo backgroundVideo = BackgroundVideo("summer travel barcelona");
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
+    //if (context.watch<User>() != null) Navigator.pushReplacementNamed(context, '/home');
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
         key:_scaffoldKey,
         children: [
           backgroundVideo,
-          TlyLogin( onPressed: () => _processSignIn(context)),
-          Builder(
-              builder: (context) => RaisedButton(
-              onPressed: () {
-                _processSignIn(context);
-              },
-              child: Text("Enter Home"),
-            ),
-          )
+          TlyLogin(onPressed: _processSignIn),
         ],
       ),
       backgroundColor: Colors.white,
     );
   }
 
-  void _processSignIn(BuildContext context) async{
-
-    // Quidado es async. Tenir-ho en compte. Si tot es correcte, s'executa el callback
+  void _processSignIn({BuildContext context, String email, String password}) async{
+    // Important anar en compte! és async. Tenir-ho en compte. Si tot es correcte, s'executa el callback
     LocationManager locationManager = Provider.of<LocationManager>(context, listen: false);
+
+    String result = await context.read<AuthenticationService>().signIn(email: email, password: password);
+    if (result != "success") {
+      Scaffold.of(context).showSnackBar(snackBarSimple(result));
+      return;
+    }
 
     await locationManager.mustHaveLocationDialogs(context,() async{
       Position position = await locationManager.getPosition(LocationAccuracy.medium);

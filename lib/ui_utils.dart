@@ -11,7 +11,7 @@ class TlyButton extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.all(10),
       child: GestureDetector(
-          onTap: () => onPressed,
+          onTap: onPressed,
           child: Container(
               width: 200,
               height: 60.0,
@@ -33,11 +33,23 @@ class TlyButton extends StatelessWidget {
   }
 }
 
-class TlyForm extends StatelessWidget {
+class TlyForm extends StatefulWidget {
   final IconData icon;
   final String text;
   final bool isPassword;
-  TlyForm(this.icon, this.text, this.isPassword);
+  final textController;
+  TlyForm(this.icon, this.text, this.isPassword, this.textController);
+
+  @override
+  _TlyFormState createState() => _TlyFormState();
+}
+
+class _TlyFormState extends State<TlyForm> {
+  @override
+  void dispose() {
+    widget.textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,15 +63,16 @@ class TlyForm extends StatelessWidget {
               color: Color.fromRGBO(50, 50, 50, 0.6),
             ),
             child: TextFormField(
-              obscureText: isPassword,
+              controller: widget.textController,
+              obscureText: widget.isPassword,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                   prefixIcon: Icon(
-                    icon,
+                    widget.icon,
                     color: Colors.white,
                   ),
                   border: InputBorder.none,
-                  hintText: text,
+                  hintText: widget.text,
                   hintStyle:
                       const TextStyle(color: Colors.white, fontSize: 15.0),
                   contentPadding: const EdgeInsets.only(
@@ -79,5 +92,11 @@ Widget snackBar(String message, String button, BuildContext context, Function on
         label: button,
         onPressed: () => onPressed
     ),
+  );
+}
+
+Widget snackBarSimple(String message) {
+  return SnackBar(
+    content: Text(message),
   );
 }
