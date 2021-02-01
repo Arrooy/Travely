@@ -7,10 +7,6 @@ import 'package:chewie/chewie.dart';
 
 import 'model/video.dart';
 
-//Per a la imatge.
-import 'dart:typed_data';
-import 'package:flutter/services.dart';
-
 class BackgroundVideo extends StatefulWidget {
   final String _firstVideoName = "assets/videos/firstVideo.mp4";
   final String _videoQuery;
@@ -52,15 +48,14 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
     _chewieController = ChewieController(
         videoPlayerController: vpc,
         autoPlay: true,
-        showControls: false,
-        placeholder: Container());
+        showControls: false);
 
       _oneTime = true;
     };
 
     createController = (int videoIndex) async {
       VideoPlayerController vpc;
-      print("Creating controller with index " + videoIndex.toString());
+      // print("Creating controller with index " + videoIndex.toString());
 
       if (videoIndex == -1) {
         vpc = VideoPlayerController.asset(widget._firstVideoName);
@@ -87,7 +82,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
         vpc = VideoPlayerController.network(url);
         await vpc.initialize();
 
-        print("Network video $videoIndex is ready!");
+        // print("Network video $videoIndex is ready!");
         vpc.setVolume(0.0);
       }
 
@@ -97,7 +92,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
         }
 
         if (_currentController == null) {
-          print("Current controller es null! returning.");
+          // print("Current controller es null! returning.");
           return;
         }
         // Crea el seguent controlador (buffering del seguent video).
@@ -107,28 +102,28 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
             _oneTime &&
             _currentController.value.position > Duration(seconds: 1)) {
           _oneTime = false;
-          print("Inside listener. Ja hi han els videos. Creant next controller...");
+          // print("Inside listener. Ja hi han els videos. Creant next controller...");
           try{
             if (videoIndex + 1 >= _videos.length) videoIndex = -2;
             _nextVideoPlayerController = await createController(videoIndex + 1);
 
           }catch(error) {
-            print("Fallback. Reproduint el primer video");
+            // print("Fallback. Reproduint el primer video");
             _nextVideoPlayerController = await createController(-1);
           }
         }
 
         if (_currentController.value.position >=
             _currentController.value.duration) {
-          print("Video finished!My video index  is $videoIndex");
-          print(_currentController.value.position.toString() +
-              " " +
-              _currentController.value.duration.toString());
+          // print("Video finished!My video index  is $videoIndex");
+          // print(_currentController.value.position.toString() +
+          //     " " +
+          //     _currentController.value.duration.toString());
 
           if (_oneSwap) {
             _oneSwap = false;
             _videoReady = false;
-            print("Inside listener. S'ha acabat el video, fent swap amb el controlador antic. Soc index $videoIndex");
+            // print("Inside listener. S'ha acabat el video, fent swap amb el controlador antic. Soc index $videoIndex");
 
 
             //Posem a null el controlador per a no tenir problemes amb el dispose.
@@ -154,8 +149,8 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
   Future<void> initializeVideos() async {
     _videos = await Video.queryVideos(widget._videoQuery);
 
-    print("External videos ready!");
-    print(_videos);
+    // print("External videos ready!");
+    // print(_videos);
   }
 
   Future<void> initializePlayer() async {
@@ -183,7 +178,7 @@ class _BackgroundVideoState extends State<BackgroundVideo> {
       scaleFactorW = _phoneWidth / videoWidth;
     }
 
-    print("Phone size is $_phoneWidth - $_phoneHeight. Video size is $videoWidth - $videoHeight. The scale factor is $scaleFactorW - $scaleFactorH.");
+    // print("Phone size is $_phoneWidth - $_phoneHeight. Video size is $videoWidth - $videoHeight. The scale factor is $scaleFactorW - $scaleFactorH.");
     // Retorna el scaling més restrictiu
     return scaleFactorH > scaleFactorW ? scaleFactorH : scaleFactorW;
   }

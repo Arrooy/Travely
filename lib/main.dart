@@ -1,5 +1,4 @@
-import 'dart:math';
-import 'package:chewie/chewie.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -36,35 +35,51 @@ class Travely extends StatelessWidget {
     return Listener(
       onPointerDown: (_) {
         FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+        if (!currentFocus.hasPrimaryFocus &&
+            currentFocus.focusedChild != null) {
           FocusManager.instance.primaryFocus.unfocus();
         }
       },
       child: MultiProvider(
         providers: [
-          Provider(create: (context) => new LocationManager()),
-          Provider<AuthenticationService>(create: (_) => AuthenticationService(FirebaseAuth.instance)),
-          StreamProvider<User>(create: (context) => context.read<AuthenticationService>().authStateChanges)
+          Provider(create: (_) => new LocationManager()),
+          Provider<AuthenticationService>(
+              create: (_) => AuthenticationService(FirebaseAuth.instance)),
+          StreamProvider<User>(create: (context)=>Provider.of<AuthenticationService>(context,listen:false).authStateChanges)
         ],
-        child: Consumer<User> (
-          builder: (context, user, child) {
-            print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-            print(user == null);
-            return MaterialApp(
-                title: 'Travely',
-                theme: new ThemeData(
-                  brightness: Brightness.dark,
-                  floatingActionButtonTheme: FloatingActionButtonThemeData(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.red,
-                      splashColor: Colors.redAccent),
-                ),
-                initialRoute: (user == null) ? '/' : '/home',
-                routes: {
-                  '/': (context) => LogInScreen(),
-                  '/home': (context) => Home(),
-                });
-          }),
+        child: MaterialApp(
+            title: 'Travely',
+            theme: new ThemeData(
+              brightness: Brightness.dark,
+              floatingActionButtonTheme: FloatingActionButtonThemeData(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                  splashColor: Colors.redAccent),
+            ),
+            initialRoute: '/',
+            routes: {
+              '/': (context) => LogInScreen(),
+              '/home': (context) => Home(),
+            }),
+        // child: Consumer<User> (
+        //   builder: (context, user, child) {
+        //     print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+        //     print(user == null ? "No data" : user);
+        //     return MaterialApp(
+        //         title: 'Travely',
+        //         theme: new ThemeData(
+        //           brightness: Brightness.dark,
+        //           floatingActionButtonTheme: FloatingActionButtonThemeData(
+        //               foregroundColor: Colors.white,
+        //               backgroundColor: Colors.red,
+        //               splashColor: Colors.redAccent),
+        //         ),
+        //         initialRoute: (user == null) ? '/' : '/home',
+        //         routes: {
+        //           '/': (context) => LogInScreen(),
+        //           '/home': (context) => Home(),
+        //         });
+        //   }),
       ),
     );
   }
@@ -77,38 +92,60 @@ class LogInScreen extends StatefulWidget {
 
 class _LogInScreenState extends State<LogInScreen> {
   BackgroundVideo backgroundVideo = BackgroundVideo("summer travel barcelona");
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    //if (context.watch<User>() != null) Navigator.pushReplacementNamed(context, '/home');
+    final bool commingFromHome = ModalRoute.of(context).settings.arguments;
+
+    if(commingFromHome == null || !commingFromHome) {
+      if (Provider.of<User>(context, listen: false) != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _signInCorrect(context);
+        });
+      }
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
-        key:_scaffoldKey,
         children: [
           backgroundVideo,
-          TlyLogin(onPressed: _processSignIn),
+          TlyLogin(onPressed: _processSignIn)
         ],
       ),
       backgroundColor: Colors.white,
     );
   }
 
-  void _processSignIn({BuildContext context, String email, String password}) async{
-    // Important anar en compte! és async. Tenir-ho en compte. Si tot es correcte, s'executa el callback
-    LocationManager locationManager = Provider.of<LocationManager>(context, listen: false);
+  void _processSignIn(
+      {BuildContext context, String email, String password}) async {
 
-    String result = await context.read<AuthenticationService>().signIn(email: email, password: password);
+
+    String result = await context
+        .read<AuthenticationService>()
+        .signIn(email: email, password: password);
     if (result != "success") {
       Scaffold.of(context).showSnackBar(snackBarSimple(result));
       return;
     }
 
-    await locationManager.mustHaveLocationDialogs(context,() async{
-      Position position = await locationManager.getPosition(LocationAccuracy.medium);
-      print("Current position is " + (position == null ? 'Unknown' : position.latitude.toString() + ', ' + position.longitude.toString()));
-      return locationManager;
+    await _signInCorrect(context);
+  }
+
+  void _signInCorrect(BuildContext context) async{
+    // Si tota la config de localitzaico es correcte, s'executa el callback
+    LocationManager locationManager =
+    Provider.of<LocationManager>(context, listen: false);
+    await locationManager.mustHaveLocationDialogs(context, () async {
+      Position position =
+      await locationManager.getPosition(LocationAccuracy.medium);
+      print("Current position is " +
+          (position == null
+              ? 'Unknown'
+              : position.latitude.toString() +
+              ', ' +
+              position.longitude.toString()));
+
     });
   }
 

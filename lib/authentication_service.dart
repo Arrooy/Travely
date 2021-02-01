@@ -15,7 +15,6 @@ class AuthenticationService {
       await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
       return "success";
     } on FirebaseAuthException catch (e) {
-      //TODO: Error en l'autenticació
       return e.message;
     }
   }
@@ -25,7 +24,6 @@ class AuthenticationService {
       await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
       return "success";
     } on FirebaseAuthException catch (e) {
-      //TODO: Error en l'autenticació
       return e.message;
     }
   }

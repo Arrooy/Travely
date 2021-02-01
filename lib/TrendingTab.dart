@@ -49,7 +49,7 @@ class TrendingPage extends StatelessWidget {
                     ),
                     const Padding(
                       padding: EdgeInsets.only(top: 16),
-                      child: Text('Awaiting result...'),
+                      child: Text('Awaiting destinations...'),
                     )
                   ];
 

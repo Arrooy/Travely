@@ -4,8 +4,8 @@ import 'package:travely/ui_utils.dart';
 
 class TlyLogin extends StatelessWidget {
   final Function onPressed;
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final emailController = TextEditingController(text:"miquelsaula@gmail.com");
+  final passwordController = TextEditingController(text: "123456");
 
   TlyLogin({this.onPressed});
 

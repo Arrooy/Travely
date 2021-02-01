@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 class HashtagBar extends StatefulWidget {
   final List<String> hashtagLabels;
   final bool smallBar;
-  HashtagBar(this.hashtagLabels, [bool this.smallBar = true]);
+  HashtagBar(this.hashtagLabels, [this.smallBar = true]);
   @override
   _HashtagBarState createState() => _HashtagBarState(this.smallBar);
 }
@@ -18,10 +18,12 @@ class _HashtagBarState extends State<HashtagBar> {
   bool _rightFadeActive = false;
   bool _scrollNotAtEdge = false;
 
-  List<Widget> hashtags;
+  List<Hashtag> hashtags;
   bool _smallBar;
 
-  _HashtagBarState(this._smallBar);
+  int _selectedHashtag;
+
+  _HashtagBarState(this._smallBar):_selectedHashtag = 0;
 
   void _scrollListener() {
     if (_scrollController.offset >=
@@ -79,12 +81,25 @@ class _HashtagBarState extends State<HashtagBar> {
     _scrollController = new ScrollController();
     _scrollController.addListener(_scrollListener);
     _rightFadeActive = !_smallBar;
-    hashtags = <Widget>[];
+    hashtags = <Hashtag>[];
+    int index = 0;
     for(var name in widget.hashtagLabels){
-      hashtags.add(Hashtag(name,!_smallBar));
+      hashtags.add(Hashtag(name, index++,
+          !_smallBar ? (index == 1) : false, !_smallBar, _updateSelected));
     }
     setState(() {});
     super.initState();
+  }
+
+  void _updateSelected(index){
+
+    hashtags[_selectedHashtag] = Hashtag.update(hashtags[_selectedHashtag], false);
+    hashtags[index] = Hashtag.update(hashtags[index], true);
+
+    _selectedHashtag = index;
+    setState(() {
+
+    });
   }
 
   @override
@@ -119,25 +134,28 @@ class _HashtagBarState extends State<HashtagBar> {
   }
 }
 
-
 class Hashtag extends StatelessWidget {
   final String text;
   final bool _addMargin;
+  final int index;
+  final Function(int) callback;
+  final bool selected;
 
-  Hashtag(this.text,this._addMargin);
+  Hashtag(this.text, this.index, this.selected, this._addMargin, this.callback);
+
+  static Hashtag update(Hashtag old, bool selected) {
+      return Hashtag(old.text, old.index, selected, old._addMargin, old.callback);
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){
-        print("Hashtag Tapped!");
-        // context.read<>();
-      },
+      onTap: ()=>this.callback(this.index),
       child: Container(
           margin: _addMargin ? const EdgeInsets.symmetric(horizontal: 5) : null,
           padding: _addMargin ? const EdgeInsets.symmetric(horizontal: 5) : null,
           decoration: BoxDecoration(
-              color: Colors.grey,
+              color: selected ? Colors.redAccent : Colors.grey,
               border: Border.all(
                 color: Colors.blueGrey,
               ),

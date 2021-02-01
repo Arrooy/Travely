@@ -63,6 +63,7 @@ class _TlyFormState extends State<TlyForm> {
               color: Color.fromRGBO(50, 50, 50, 0.6),
             ),
             child: TextFormField(
+
               controller: widget.textController,
               obscureText: widget.isPassword,
               style: const TextStyle(color: Colors.white),
@@ -90,7 +91,7 @@ Widget snackBar(String message, String button, BuildContext context, Function on
     content: Text(message),
     action: SnackBarAction(
         label: button,
-        onPressed: () => onPressed
+        onPressed: () => onPressed(context)
     ),
   );
 }

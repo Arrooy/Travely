@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 import 'package:travely/FABBottomAppBar.dart';
 import 'package:travely/AnimatedFab.dart';
 
@@ -9,7 +11,9 @@ import 'package:travely/model/LocationManager.dart';
 import 'package:travely/utils.dart';
 
 import 'package:google_fonts/google_fonts.dart';
-import 'package:travely/TrendingPage.dart';
+import 'package:travely/TrendingTab.dart';
+
+import 'authentication_service.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -22,11 +26,13 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-     return Scaffold(
+    return Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: Text("Travely",
-          style: GoogleFonts.getFont("Pacifico",fontSize: 32),),
+          title: Text(
+            "Travely",
+            style: GoogleFonts.getFont("Pacifico", fontSize: 32),
+          ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: AnimatedFab(
@@ -48,42 +54,49 @@ class _HomeState extends State<Home> {
                   tooltipText: 'Your saved destinations'),
             ],
             selectedColor: Colors.red),
-
-
         body: AnimatedSwitcher(
-          duration: const Duration(milliseconds:300),
+          duration: const Duration(milliseconds: 300),
           // Podem escollir entre moltes... https://medium.com/flutterdevs/page-transitions-in-flutter-5236a8afae92
-          transitionBuilder: (Widget child,Animation<double> animation) => FadeTransition(
-            opacity:animation,
+          transitionBuilder: (Widget child, Animation<double> animation) =>
+              FadeTransition(
+            opacity: animation,
             child: child,
           ),
-          child:_animatedWidget,
-        )
-    );
+          child: _animatedWidget,
+        ));
   }
 
-  void _bottomBarTabSelected(pageIndex){
+  void _bottomBarTabSelected(pageIndex) {
     // Botons de la barra de navegacio
-    if(_lastPage == pageIndex) return;
+    if (_lastPage == pageIndex) return;
 
     setState(() {
-     switch(pageIndex){
-       case 0:
-         _animatedWidget = TrendingPage();
-         break;
-       case 1:
-        _animatedWidget = Container(color:Colors.greenAccent,child:Center(child:Text("user menu")));
-         break;
-       default:
-         print("Atenció! S'ha apretat un botó no configurat.");
-     }
+      switch (pageIndex) {
+        case 0:
+          _animatedWidget = TrendingPage();
+          break;
+        case 1:
+          _animatedWidget = Container(
+              color: Colors.greenAccent,
+              child: Center(
+                  child: RaisedButton(
+                onPressed: () {
+                  Provider.of<AuthenticationService>(context, listen: false)
+                      .signOut();
+                  Navigator.pushReplacementNamed(context, '/',arguments: true);
+                },
+                child: Text("LogOut"),
+              )));
+          break;
+        default:
+          print("Atenció! S'ha apretat un botó no configurat.");
+      }
     });
     _lastPage = pageIndex;
   }
 
-  Function(int) _bottomBarPlaneButton(buttonIndex){
+  Function(int) _bottomBarPlaneButton(buttonIndex) {
     // Boto de buscar vols
-
   }
 }
 /*

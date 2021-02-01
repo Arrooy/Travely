@@ -84,7 +84,8 @@ class LocationManager {
   }
 
   void _enterHome(BuildContext context, Function callback){
-    Navigator.pushReplacementNamed(context, '/home',arguments: callback());
+    callback();
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   // S'encarreg d'obligar a l'usuari a activar el gps + acceptar localitzacio.
@@ -110,10 +111,10 @@ class LocationManager {
           if (result == PermissionError.allOk) {
             _enterHome(context,callback);
           }else{
-            Scaffold.of(context).showSnackBar(snackBar("Please accept the location permissions!","Solve", context, () => mustHaveLocationDialogs(context,callback)));
+            Scaffold.of(context).showSnackBar(snackBar("Please accept the location permissions!","Solve", context, (context) => mustHaveLocationDialogs(context,callback)));
           }
         },popCallback:(){
-          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please accept the location permissions!","Solve", context, () => mustHaveLocationDialogs(context,callback)));
+          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please accept the location permissions!","Solve", context, (context) => mustHaveLocationDialogs(context,callback)));
         });
         break;
       case PermissionError.permissionsDeniedForever:
@@ -128,7 +129,7 @@ class LocationManager {
           openSettings();
         },
             popCallback: (){
-              Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn.\nPlease accept the location permissions from your system settings!","Open dialog", context, () => mustHaveLocationDialogs(context,callback)));
+              Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn.\nPlease accept the location permissions from your system settings!","Open dialog", context, (context) => mustHaveLocationDialogs(context,callback)));
             });
 
         break;
@@ -140,7 +141,7 @@ class LocationManager {
             "Travely needs location services",
             "This app uses your location to suggest the best places to travel to.\n\nPlease activate the device location!",
             "Open system settings",(){openSettings();},popCallback: (){
-          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please activate the device location!","Open dialog", context, () => mustHaveLocationDialogs(context,callback)));
+          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please activate the device location!","Open dialog", context, (context) => mustHaveLocationDialogs(context,callback)));
         });
 
         break;

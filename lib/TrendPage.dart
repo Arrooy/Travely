@@ -6,8 +6,8 @@ class TrendPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        print("Pressed page");
+      onDoubleTap: () {
+        print("Liked page");
       },
       child: Stack(
         children: [
