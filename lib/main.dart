@@ -1,4 +1,5 @@
-
+import 'dart:math';
+import 'package:chewie/chewie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -117,13 +118,10 @@ class _LogInScreenState extends State<LogInScreen> {
     );
   }
 
-  void _processSignIn(
-      {BuildContext context, String email, String password}) async {
-
-
-    String result = await context
-        .read<AuthenticationService>()
-        .signIn(email: email, password: password);
+  void _processSignIn({BuildContext context, String email, String password, bool isSignUp}) async {
+    String result;
+    if (isSignUp) result = await context.read<AuthenticationService>().signUp(email: email, password: password);
+    else          result = await context.read<AuthenticationService>().signIn(email: email, password: password);
     if (result != "success") {
       Scaffold.of(context).showSnackBar(snackBarSimple(result));
       return;

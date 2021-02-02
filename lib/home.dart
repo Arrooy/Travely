@@ -1,18 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/FABBottomAppBar.dart';
 import 'package:travely/AnimatedFab.dart';
-
-import 'package:google_place/google_place.dart';
-import 'package:travely/model/LocationManager.dart';
-import 'package:travely/utils.dart';
-
 import 'package:google_fonts/google_fonts.dart';
 import 'package:travely/TrendingTab.dart';
-
+import 'package:travely/PhotoGrid.dart';
 import 'authentication_service.dart';
 
 class Home extends StatefulWidget {
@@ -77,24 +71,30 @@ class _HomeState extends State<Home> {
           break;
         case 1:
           _animatedWidget = Container(
-              color: Colors.greenAccent,
-              child: Center(
-                  child: RaisedButton(
-                onPressed: () {
-                  Provider.of<AuthenticationService>(context, listen: false)
-                      .signOut();
-                  Navigator.pushReplacementNamed(context, '/',arguments: true);
-                },
-                child: Text("LogOut"),
-              )));
+              color: Theme.of(context).primaryColor,
+              child: Column(
+                children: [
+                  //TODO: Posar aquí el printerest
+                  Expanded(
+                      child: PhotoGrid()
+                  ),
+          //        Center(
+          //          child: RaisedButton(
+          //            onPressed: () {
+          //              Provider.of<AuthenticationService>(context, listen: false).signOut();
+          //              Navigator.pushReplacementNamed(context, '/', arguments: true);
+          //              },
+          //            child: Text("LogOut"),
+          //          ))
+          //        ],
+              ]));
           break;
-        default:
-          print("Atenció! S'ha apretat un botó no configurat.");
+          default:
+            print("Atenció! S'ha apretat un botó no configurat.");
       }
     });
     _lastPage = pageIndex;
   }
-
   Function(int) _bottomBarPlaneButton(buttonIndex) {
     // Boto de buscar vols
   }
