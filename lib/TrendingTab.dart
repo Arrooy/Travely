@@ -5,80 +5,68 @@ import 'package:provider/provider.dart';
 import 'package:travely/HashtagBar.dart';
 import 'package:travely/TrendPage.dart';
 
+import 'model/Booking.dart';
 import 'model/LocationManager.dart';
 
-class TrendingPage extends StatelessWidget {
+class TrendingTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
 
-    return  Stack(children: [
+      return FutureBuilder <bool>(
+          future: Provider.of<TrendingsModel>(context,listen: false).requestAndUpdateData(context),
+          builder: (BuildContext context,  AsyncSnapshot<bool> snapshot) {
+            List<Widget> children;
+            if (snapshot.hasData && snapshot.data) {
 
-      PageView.builder(
-        scrollDirection: Axis.vertical,
+                return Stack(children: [
 
-        itemBuilder: (context, position) {
+                  PageView.builder(
+                    scrollDirection: Axis.vertical,
 
-          print("PAGE BUILD! $position");
-          return FutureBuilder <String>(
-              future: _calculation,
-              builder: (BuildContext context,  AsyncSnapshot<String> snapshot) {
-                List<Widget> children;
-                if (snapshot.hasData) {
+                    itemBuilder: (context, position) {
+                      // Modifiquem el model amb el trend page actual.
+                      Provider.of<TrendingsModel>(context, listen: false).newTrendPageIndex = position;
 
-                    return TrendPage();
-
-                } else if (snapshot.hasError) {
-                  children = <Widget>[
-                    Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 60,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text('Error: ${snapshot.error}'),
-                    )
-                  ];
-                } else {
-                  children = <Widget>[
-                    SizedBox(
-                      child: CircularProgressIndicator(),
-                      width: 60,
-                      height: 60,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: Text('Awaiting destinations...'),
-                    )
-                  ];
-
-                }
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: children,
+                      //Pintem el trendPage
+                      return TrendPage();
+                    },
                   ),
-                );
-              });
-        },
-      ),
-      HashtagBar(["Popular Destinations","Cheapest Travels",
-          "Weekend Scape",
-          "Best Quality",
-          "Short Flight"], false)
-    ]);
+                  HashtagBar(Provider.of<TrendingsModel>(context, listen:false).options, false),
+                ]);
+
+            } else if (snapshot.hasError ||(snapshot.data != null &&  !snapshot.data)) {
+              children = <Widget>[
+                Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 60,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text('Error: ${snapshot.error}'),
+                )
+              ];
+            } else {
+              children = <Widget>[
+                SizedBox(
+                  child: CircularProgressIndicator(),
+                  width: 60,
+                  height: 60,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text('Awaiting destinations...'),
+                )
+              ];
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: children,
+              ),
+            );
+          });
   }
-
-  Future<Widget> _buildView(context, position) async{
-    LocationManager locationManager = Provider.of<LocationManager>(context, listen: false);
-    Position pos = await locationManager.getPosition(LocationAccuracy.low);
-
-  }
-
-  final Future<String> _calculation = Future<String>.delayed(
-    Duration(seconds: 2),
-        () => 'Data Loaded',
-  );
 }

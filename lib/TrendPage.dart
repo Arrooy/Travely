@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:travely/HashtagBar.dart';
+
+import 'model/Booking.dart';
 
 class TrendPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onDoubleTap: () {
-        print("Liked page");
+        Provider.of<TrendingsModel>(context, listen: false).favButton(context);
       },
       child: Stack(
         children: [
@@ -28,10 +31,12 @@ class TrendPage extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 50),
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                      icon: Icon(Icons.star_border),
+                      icon: Consumer<TrendingsModel>(builder: (ctx,m,c){
+                        return m.current.fav ? Icon(Icons.star,color:Colors.yellowAccent,size: 32,) : Icon(Icons.star_border,size: 32);
+                      },),
                       tooltip: "Add to favorites",
                       onPressed: () {
-                        print("Fav button pressed.");
+                        Provider.of<TrendingsModel>(context, listen: false).favButton(context);
                       }),
                 ),
                 Container(
@@ -44,20 +49,29 @@ class TrendPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           children: [
-                            Text(
-                              "Puerto Rico",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 54),
-                            ),
-                            Text(
-                              "120€",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 42),
-                            )
-                          ]),
+                            Consumer<TrendingsModel>(builder: (ctx,m,c){
+                              return Text(
+                                m.current.destination,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 54),
+                              );
+                            },),
+                            Consumer<TrendingsModel>(builder: (ctx,m,c){
+                              return Text(
+                                m.current.price.toString() + "€",
 
-                      Text("Monday, 27/02",style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32)),
-                      HashtagBar(["Adventure", "Food", "Night fun", "Impresive"], true),
+                                textAlign: TextAlign.center,
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 42)
+                              );
+                            },)
+                          ]),
+                      Consumer<TrendingsModel>(builder: (ctx,m,c){
+
+                        return Text(m.current.departureTime.toString(),style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32));
+
+                      },),
+
+                      HashtagBar(Provider.of<TrendingsModel>(context,listen:false).current.hashtags, true),
                     ],
                   ),
                 )

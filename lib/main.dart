@@ -2,18 +2,13 @@ import 'dart:math';
 import 'package:chewie/chewie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:travely/GenericDialog.dart';
 import 'package:travely/authentication_service.dart';
 import 'package:travely/model/LocationManager.dart';
-import 'package:travely/map.dart';
-import 'package:travely/model/LocationManager.dart';
 import 'package:travely/ui_utils.dart';
-import 'package:video_player/video_player.dart';
 
 import 'package:travely/background_video.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +16,8 @@ import 'package:flutter/services.dart';
 import 'package:travely/home.dart';
 
 import 'login.dart';
+import 'model/Booking.dart';
+import 'model/UserManager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,10 +40,12 @@ class Travely extends StatelessWidget {
       },
       child: MultiProvider(
         providers: [
-          Provider(create: (_) => new LocationManager()),
+          Provider<LocationManager>(create: (_) => new LocationManager()),
           Provider<AuthenticationService>(
               create: (_) => AuthenticationService(FirebaseAuth.instance)),
-          StreamProvider<User>(create: (context)=>Provider.of<AuthenticationService>(context,listen:false).authStateChanges)
+          StreamProvider<User>(create: (context)=>Provider.of<AuthenticationService>(context,listen:false).authStateChanges),
+          ListenableProvider<TrendingsModel>( create: (_) => new TrendingsModel(),),
+          Provider<UserManager>(create: (_)=> new UserManager(),)
         ],
         child: MaterialApp(
             title: 'Travely',
@@ -62,25 +61,6 @@ class Travely extends StatelessWidget {
               '/': (context) => LogInScreen(),
               '/home': (context) => Home(),
             }),
-        // child: Consumer<User> (
-        //   builder: (context, user, child) {
-        //     print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-        //     print(user == null ? "No data" : user);
-        //     return MaterialApp(
-        //         title: 'Travely',
-        //         theme: new ThemeData(
-        //           brightness: Brightness.dark,
-        //           floatingActionButtonTheme: FloatingActionButtonThemeData(
-        //               foregroundColor: Colors.white,
-        //               backgroundColor: Colors.red,
-        //               splashColor: Colors.redAccent),
-        //         ),
-        //         initialRoute: (user == null) ? '/' : '/home',
-        //         routes: {
-        //           '/': (context) => LogInScreen(),
-        //           '/home': (context) => Home(),
-        //         });
-        //   }),
       ),
     );
   }
@@ -99,7 +79,10 @@ class _LogInScreenState extends State<LogInScreen> {
     final bool commingFromHome = ModalRoute.of(context).settings.arguments;
 
     if(commingFromHome == null || !commingFromHome) {
-      if (Provider.of<User>(context, listen: false) != null) {
+      User user = Provider.of<User>(context, listen: false);
+      if (user != null) {
+        Provider.of<UserManager>(context,listen: false).email = user.email;
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _signInCorrect(context);
         });
@@ -111,7 +94,7 @@ class _LogInScreenState extends State<LogInScreen> {
       body: Stack(
         children: [
           backgroundVideo,
-          TlyLogin(onPressed: _processSignIn)
+          SignInSignUp(onPressed: _processSignIn)
         ],
       ),
       backgroundColor: Colors.white,
@@ -134,17 +117,7 @@ class _LogInScreenState extends State<LogInScreen> {
     // Si tota la config de localitzaico es correcte, s'executa el callback
     LocationManager locationManager =
     Provider.of<LocationManager>(context, listen: false);
-    await locationManager.mustHaveLocationDialogs(context, () async {
-      Position position =
-      await locationManager.getPosition(LocationAccuracy.medium);
-      print("Current position is " +
-          (position == null
-              ? 'Unknown'
-              : position.latitude.toString() +
-              ', ' +
-              position.longitude.toString()));
-
-    });
+    await locationManager.mustHaveLocationDialogs(context);
   }
 
   @override

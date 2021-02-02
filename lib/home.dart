@@ -1,9 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/FABBottomAppBar.dart';
 import 'package:travely/AnimatedFab.dart';
+
+import 'package:google_place/google_place.dart';
+import 'package:travely/model/LocationManager.dart';
+import 'package:travely/utils.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:travely/TrendingTab.dart';
 import 'package:travely/PhotoGrid.dart';
@@ -15,7 +21,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Widget _animatedWidget = TrendingPage();
+  Widget _animatedWidget = TrendingTab();
   int _lastPage = 0;
 
   @override
@@ -67,7 +73,7 @@ class _HomeState extends State<Home> {
     setState(() {
       switch (pageIndex) {
         case 0:
-          _animatedWidget = TrendingPage();
+          _animatedWidget = TrendingTab();
           break;
         case 1:
           _animatedWidget = Container(

@@ -73,7 +73,7 @@ class Video {
   static Future<List<Video>> queryVideos(String query) async {
     final response = await http.get(
         'https://api.pexels.com/videos/search?query=$query&per_page=3&orientation=portrait&size=medium',
-        headers: {HttpHeaders.authorizationHeader: pexelToken});
+        headers: {HttpHeaders.authorizationHeader: pexelApiToken});
 
     List<Video> result = [];
 

@@ -2,18 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:travely/ui_utils.dart';
 
-class TlyLogin extends StatefulWidget {
+class SignInSignUp extends StatefulWidget {
   final Function onPressed;
   final emailController = TextEditingController(text:"miquelsaula@gmail.com");
   final passwordController = TextEditingController(text: "123456");
 
-  TlyLogin({this.onPressed});
+  SignInSignUp({this.onPressed});
 
   @override
-  _TlyLoginState createState() => _TlyLoginState();
+  _SignInSignUpState createState() => _SignInSignUpState();
 }
 
-class _TlyLoginState extends State<TlyLogin> {
+class _SignInSignUpState extends State<SignInSignUp> {
   bool isSignUp = false;
 
   Widget build(BuildContext buildContext){
@@ -27,7 +27,7 @@ class _TlyLoginState extends State<TlyLogin> {
           TlyForm(Icons.person, "E-Mail", false, widget.emailController),
           TlyForm(Icons.lock, "Password", true, widget.passwordController),
           Spacer(flex: 1,),
-          TlyButton((isSignUp) ? "Sign In" : "Log In", () => {
+          TlyButton((isSignUp) ? "Sign In" : "Sign Up", () => {
             widget.onPressed(
                 context: buildContext,
                 email: widget.emailController.text.trim(),
