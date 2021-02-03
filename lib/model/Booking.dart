@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -50,27 +52,18 @@ class TrendingsModel extends ChangeNotifier{
 
     Bookings bks = _bookings[_filterSelected];
     Booking current = bks.list[bks.currentPage];
+    String username = Provider.of<UserManager>(ctx,listen: false).email.split('@')[0];
+    var ref = FirebaseDatabase.instance.reference().child("${username}/").child(current.id);
 
     if(current.fav){
       // S'ha de treure de fav
       _bookings.last.list.remove(current);
+      ref.remove();
     }else{
       // S'ha d'afegir
       _bookings.last.list.add(current);
+      ref.set(current.createSet());
     }
-
-    // String userEmail = Provider.of<UserManager>(ctx,listen: false).email;
-    // print(FirebaseDatabase.instance.databaseURL);
-    // var ref = FirebaseDatabase().reference().push().set({"HAHA":"JEJE"}).then((_){
-    // print("DATA IS ON THE CLKOUD");
-    // }).catchError((errror){
-    //   print(errror);
-    // });
-
-    //
-    // ref.child(current.id.toString()).set(current.createSet());
-    // TODO: SAULA.
-    // https://medium.com/codechai/realtime-database-in-flutter-bef0f29e3378
 
     // Toogle del fav.
     current.favButton();
@@ -336,7 +329,7 @@ class Booking extends ChangeNotifier{
 
     this.price = json["price"];
 
-    this.image = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHw%3D&w=1000&q=80";
+    this.image = 'https://picsum.photos/${200 + Random().nextInt(30)}/300/?random'; //"https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHw%3D&w=1000&q=80";
 
     this.fav = false;
     print(this);
@@ -360,7 +353,8 @@ class Booking extends ChangeNotifier{
       'shortOrigin': shortOrigin,
       'shortDestination':shortDestination,
       'price': price,
-      'departureTime':_departureTime
+      'departureTime':_departureTime,
+      'imageUrl': image
     };
   }
 
