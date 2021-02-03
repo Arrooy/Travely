@@ -17,9 +17,12 @@ class TrendPage extends StatelessWidget {
         Container(
         height: double.infinity,
         width: double.infinity,
-          child:
-          Image.network("https://qtxasset.com/travelagentcentral/1581619297/shutterstock_1067855027.jpg/shutterstock_1067855027.jpg?99r3CQxfs0jWE48ix6vqYM1Cp15PhnkQ",
-          fit: BoxFit.cover,)),
+          child:Consumer<TrendingsModel>(builder: (ctx,m,c){
+            return Image.network(m.current.image,
+            fit: BoxFit.cover);
+
+          },)
+         ),
 
           Container(
             padding: const EdgeInsets.all(20),
@@ -67,7 +70,7 @@ class TrendPage extends StatelessWidget {
                           ]),
                       Consumer<TrendingsModel>(builder: (ctx,m,c){
 
-                        return Text(m.current.departureTime.toString(),style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32));
+                        return Text(m.current.departureTime,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32));
 
                       },),
 

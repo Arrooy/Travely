@@ -17,7 +17,7 @@ class TrendingTab extends StatelessWidget {
       return FutureBuilder <bool>(
           future: Provider.of<TrendingsModel>(context,listen: false).requestAndUpdateData(context),
           builder: (BuildContext context,  AsyncSnapshot<bool> snapshot) {
-            List<Widget> children;
+
             if (snapshot.hasData && snapshot.data) {
 
                 return Stack(children: [

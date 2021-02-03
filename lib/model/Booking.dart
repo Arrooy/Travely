@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/model/UserManager.dart';
 import 'package:travely/utils.dart';
@@ -32,17 +33,6 @@ class TrendingsModel extends ChangeNotifier{
     _filterSelected = 0;
 
     _bookings = List<Bookings>();
-
-    //
-    // var list = List<Booking>();
-    // var hastags = List<String>();
-    // hastags.add("Amor");
-    // hastags.add("Pasion");
-    // hastags.add("Desenredo");
-    //
-    // list.add(new Booking("Canarias",150,hastags,new DateTime.now(),false,0));
-    // list.add(new Booking("Uebon",5,hastags,new DateTime.now(),false,0));
-
   }
 
   List<String> get options => _options;
@@ -69,11 +59,16 @@ class TrendingsModel extends ChangeNotifier{
       _bookings.last.list.add(current);
     }
 
-    String userEmail = Provider.of<UserManager>(ctx,listen: false).email;
-    var ref = FirebaseDatabase().reference().child(userEmail);
+    // String userEmail = Provider.of<UserManager>(ctx,listen: false).email;
+    // print(FirebaseDatabase.instance.databaseURL);
+    // var ref = FirebaseDatabase().reference().push().set({"HAHA":"JEJE"}).then((_){
+    // print("DATA IS ON THE CLKOUD");
+    // }).catchError((errror){
+    //   print(errror);
+    // });
 
-
-    ref.child(current.id.toString()).set(current.createSet());
+    //
+    // ref.child(current.id.toString()).set(current.createSet());
     // TODO: SAULA.
     // https://medium.com/codechai/realtime-database-in-flutter-bef0f29e3378
 
@@ -92,11 +87,13 @@ class TrendingsModel extends ChangeNotifier{
   // Retorna true si tot esta correcte.
   // Retorna false si hi ha algun problema.
   Future<bool> requestAndUpdateData(BuildContext ctx) async{
-
     LocationManager locationManager = Provider.of<LocationManager>(ctx, listen: false);
     Position pos = await locationManager.getPosition(LocationAccuracy.low);
 
+    final stopwatch = Stopwatch()..start();
     Bookings popularDest    = await searchPopularDestinations(pos);
+    print('searchPopularDestinations() executed in ${stopwatch.elapsed}');
+
     Bookings cheapestTravel = await searchCheapestTravel(pos);
     Bookings weekendScape   = await searchWeekendScape(pos);
     Bookings bestQuality    = await searchBestQuality(pos);
@@ -104,13 +101,14 @@ class TrendingsModel extends ChangeNotifier{
 
     // TOdo: Afegir sort by Date.
 
-    if(_bookings.isNotEmpty)print("Bookings not empty!");
+    if(_bookings.isNotEmpty) _bookings.clear();
 
     _bookings.add(popularDest);
-    _bookings.add(cheapestTravel);
-    _bookings.add(weekendScape);
-    _bookings.add(bestQuality);
-    _bookings.add(shortFlight);
+    // _bookings.add(cheapestTravel);
+    // _bookings.add(weekendScape);
+    // _bookings.add(bestQuality);
+    // _bookings.add(shortFlight);
+
     return true;
   }
 
@@ -119,22 +117,150 @@ class TrendingsModel extends ChangeNotifier{
   searchPopularDestinations(Position pos) async {
     List<Booking> bookingList = [];
 
-    final response = await http.get(
-        'https://tequila-api.kiwi.com/locations/topdestinations',
-        headers: {HttpHeaders.authorizationHeader: tequilaApiToken});
+    List<String> nearAirports = await searchAirportsNearPos(pos);
+    List<String> popularDestinations = await bestDestinationsFromNearAirports(nearAirports);
+    bookingList = await searchFlightsToDestinations(nearAirports,popularDestinations);
+
+    return Bookings(bookingList);
+  }
+
+  Future<List<Booking>> searchFlightsToDestinations( List<String> nearAirports, List<String> popularDestinations) async{
+    List<Booking> bookingList = [];
+
+    //Aeroports de sortida -> format de la Api: A,B,C
+    String nearAirportsReq = nearAirports.toString().replaceAll(" ", "");
+    nearAirportsReq = nearAirportsReq.substring(1,nearAirportsReq.length - 1);
+
+    // Destinacions format de api: A,B,C
+    String popularDestinationsReq = popularDestinations.toString().replaceAll(" ", "");
+    popularDestinationsReq = popularDestinationsReq.substring(1,popularDestinationsReq.length - 1);
+
+    // Busquem vols desde avui, fins d'aqui 7 dies
+    var now = new DateTime.now();
+    var formatter = new DateFormat('dd/MM/yyyy');
+    var oneWeekFromNow = now.add(new Duration(days: 30));
+
+    // Fem la peticio al backend
+    final response = await http.get(req('/v2/search',{
+      "fly_from":nearAirportsReq,
+      "fly_to": popularDestinationsReq,
+      "dateFrom":formatter.format(now),
+      "dateTo":formatter.format(oneWeekFromNow),
+      "flight_type":"oneway",
+      "one_for_city":1,
+      "sort":"date",
+      "vehicle_type":"aircraft"
+    }), headers: {'apikey': "QEiR_0FuSG8t7MquzDjz3LrLPqXDTXsW"});
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON
-      var json = jsonDecode(response.body);
 
-      return Bookings(bookingList);
+      var json = jsonDecode(response.body);
+      for (var data in json["data"]){
+        bookingList.add(Booking()..fromJson(data));
+      }
+
+      return bookingList;
     } else {
+      debugPrint("Error!! ${response.body}");
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load song');
     }
   }
+
+  // Obte totes les destinacions populars dels aeroports introduits.
+  // Automaticament elimina les repeticions.
+  Future<List<String>> bestDestinationsFromNearAirports(List<String> nearAirports) async {
+    List<Future<List<String>>> popularDestinations = [];
+
+    // Per a cada aeroport busquem les destinacions més populars
+    for(var airport in nearAirports){
+      popularDestinations.add(popularDestinationsFromPlace(airport));
+    }
+
+    // Un cop s'han fet totes les crides, esperem a tenir la info.
+    List<String> result = [];
+    for (var future in popularDestinations){
+      result.addAll(await future);
+    }
+
+    // Borrem els duplicats obtinguts.
+    return result.toSet().toList();
+  }
+
+  /*
+  Mateixa funcio sense optimitzar. Cada request de api es sincrona. Malament!
+
+  Future<List<String>> bestDestinationsFromNearAirports(List<String> nearAirports) async {
+    List<String> popularDestinations = [];
+    for(var airport in nearAirports){
+      List<String> newDestinations = await popularDestinationsFromPlace(airport);
+      popularDestinations.addAll(newDestinations);
+    }
+    return popularDestinations.toSet().toList();
+  }
+  */
+
+
+  // Retorna una llista amb les destinacions més populars
+  Future<List<String>> popularDestinationsFromPlace(String airport) async{
+    List<String> result = [];
+    final response = await http.get(req('/locations/topdestinations',{
+      "term":airport,
+      "limit":5,
+      "locale":"en-US",//"es-ES",
+      "active_only":true
+    }), headers: {'apikey': tequilaApiToken});
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON
+      var json = jsonDecode(response.body);
+      for (var loc in json["locations"]){
+        result.add(loc["id"]);
+      }
+
+      return result;
+    } else {
+      debugPrint("Error!! ${response.body}");
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load song');
+    }
+  }
+
+  Future<List<String>> searchAirportsNearPos(Position pos) async{
+    List<String> result = [];
+    final response = await http.get(req('/locations/radius',{
+      "lat":pos.latitude,
+      "lon":pos.longitude,
+      "radius":250,
+      "location_types":"airport",
+      "limit":5,
+      "locale":"en-US",
+      "active_only":true
+    }), headers: {'apikey': tequilaApiToken});
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON
+      var json = jsonDecode(response.body);
+      for (var loc in json["locations"]){
+        result.add(loc["id"]);
+      }
+
+      return result;
+    } else {
+      debugPrint("Error!! ${response.body}");
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load song');
+    }
+
+  }
+
 
   searchShortFlight(Position pos) {
 
@@ -152,6 +278,8 @@ class TrendingsModel extends ChangeNotifier{
   searchCheapestTravel(Position pos) {
 
   }
+
+
 
 
 }
@@ -174,19 +302,53 @@ class Bookings extends ChangeNotifier{
 
 // Defineix un booking.
 class Booking extends ChangeNotifier{
-  int id;
+
+  String id;
+
   String destination;
-  String shortName;
+  String shortDestination;
 
-  String image;
+  String origin;
+  String shortOrigin;
+
   int price;
+
   List<String> hashtags;
-  DateTime departureTime;
+
+  DateTime _departureTime;
+
   bool fav;
+  String image;
 
-  Booking(this.destination, this.price, this.hashtags, this.departureTime,
-      this.fav);
+  void fromJson(Map<String,dynamic> json){
+    // Booking booking = new Booking();
+    this.origin = json["cityFrom"];
+    this.shortOrigin = json["flyFrom"];
 
+    this.destination = json["cityTo"];
+    this.shortDestination = json["flyTo"];
+
+    this.id = json["id"];
+    this.hashtags = ["Hi"];
+
+    //Todo: Verificar la data.
+    this._departureTime = DateTime.parse(json["utc_departure"]);
+
+    this.price = json["price"];
+
+    this.image = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHw%3D&w=1000&q=80";
+
+    this.fav = false;
+    print(this);
+  }
+
+
+  String get departureTime{
+    var formatter = new DateFormat('EEE dd/MM \'at\' h:mm a');
+    return formatter.format(_departureTime);
+  }
+
+  // Toogle del boto de like.
   void favButton(){
       this.fav = !this.fav;
       notifyListeners();
@@ -195,10 +357,24 @@ class Booking extends ChangeNotifier{
   // Retorna el set per a guardar-lo a firebase realtime db.
   createSet() {
     return {
-      'shortName': shortName,
+      'shortOrigin': shortOrigin,
+      'shortDestination':shortDestination,
       'price': price,
-      'departureTime':departureTime
+      'departureTime':_departureTime
     };
+  }
+
+  @override
+  String toString() {
+    return 'Booking{destination: $destination, shortDestination: $shortDestination, origin: $origin, shortOrigin: $shortOrigin, departureTime: $_departureTime}';
   }
 }
 
+String req(String endpoint, Map<String,dynamic> values){
+  String result = tequilaBaseURL + endpoint + "/?";
+  for (var v in values.keys){
+    result += v+"="+values[v].toString()+"&";
+  }
+  // Eliminem l'ultim &
+  return result.substring(0, result.length - 1);
+}

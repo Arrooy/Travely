@@ -13,22 +13,22 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^0.7.0
-  firebase_database: ^6.0.0
-  firebase_auth: ^0.20.0+1
-
-  cupertino_icons: ^1.0.0
+  firebase_core: ^0.7.0 # Core de firebase.
+  firebase_database: ^6.0.0 # Per la real time database -> guardar bookins preferits
+  firebase_auth: ^0.20.0+1 # Per auth dels usuaris
+  cupertino_icons: ^1.0.0 # Iconos de IOS
   equatable: ^1.1.1 # Permet comprar objectes
   video_player: ^1.0.1 #Lowlevel video player
   chewie: ^0.12.2 # Abstract del video_player.
   flutter_cache_manager: ^1.2.2 #Cache manager per als videos.
-  pedantic: ^1.8.0+1
-  http: ^0.12.2
-  google_maps_flutter: ^1.1.1
+  pedantic: ^1.8.0+1 # Revisa que el codi compleixi amb best practices de google
+  http: ^0.12.2 # Per a les peticions a les apis.
+  google_maps_flutter: ^1.1.1 # Per el mapa de preus
   google_place: ^0.3.3
-  google_fonts: ^1.1.2
-  geolocator: ^6.1.14
-  provider: ^4.3.3
+  google_fonts: ^1.1.2 # Per fonts de google.
+  geolocator: ^6.1.14 # Per localitzacio del usuari
+  provider: ^4.3.3 # Per state management
+  intl: ^0.16.1 # Per date fromat
 
 dev_dependencies:
   flutter_test:

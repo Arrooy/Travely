@@ -27,7 +27,7 @@ class _SignInSignUpState extends State<SignInSignUp> {
           TlyForm(Icons.person, "E-Mail", false, widget.emailController),
           TlyForm(Icons.lock, "Password", true, widget.passwordController),
           Spacer(flex: 1,),
-          TlyButton((isSignUp) ? "Sign In" : "Sign Up", () => {
+          TlyButton((!isSignUp) ? "Sign In" : "Sign Up", () => {
             widget.onPressed(
                 context: buildContext,
                 email: widget.emailController.text.trim(),

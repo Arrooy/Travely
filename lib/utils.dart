@@ -12,6 +12,7 @@ final String googlePlacesApiToken = "AIzaSyAc4XLMDlLVeSatFQLqoTxuwjakIyWqFwo";
 
 //https://tequila.kiwi.com/portal/my-solutions
 final String tequilaApiToken = "nS0OLaxhbQ79iNHAcvMdZDM1Lmv6Qn8_";
+String tequilaBaseURL = "https://tequila-api.kiwi.com";
 
 double getPhoneWidth(BuildContext context){
   return MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio;

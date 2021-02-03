@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "784468949312",
+    "firebase_url": "https://aams-travely-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "aams-travely",
     "storage_bucket": "aams-travely.appspot.com"
   },
