@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:travely/authentication_service.dart';
 
 class TlyButton extends StatelessWidget {
   final String text;
@@ -99,5 +101,91 @@ Widget snackBar(String message, String button, BuildContext context, Function on
 Widget snackBarSimple(String message) {
   return SnackBar(
     content: Text(message),
+  );
+}
+
+
+
+Widget futureLoading(String message) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          child: CircularProgressIndicator(),
+          width: 60,
+          height: 60,
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: Text(message),
+        )
+      ],
+    ),
+  );
+}
+
+
+Widget futureError(error){
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Icon(
+          Icons.error_outline,
+          color: Colors.red,
+          size: 60,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Text('Error: $error'),
+        )
+      ],
+    ),
+  );
+}
+
+
+Widget homeDrawer(BuildContext context){
+ return  Drawer(
+    elevation: 5,
+    child: ListView(
+      // Important: Remove any padding from the ListView.
+      padding: EdgeInsets.zero,
+
+      children: <Widget>[
+        DrawerHeader(
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.zero,
+            // decoration: BoxDecoration(
+            // image: DecorationImage(
+            //     fit: BoxFit.fill,
+            //     image:  Image.network('path/to/header_background.png'))),
+            child: Stack(children: <Widget>[
+              Positioned(
+                  bottom: 12.0,
+                  left: 16.0,
+                  child: Text("Account settings",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.w500))),
+            ])),
+        ListTile(
+          title: Text('Delete all bookings'),
+          onTap: () {},
+        ),
+        ListTile(
+          title: Text('LogOut'),
+          onTap: () {
+            Provider.of<AuthenticationService>(context, listen: false)
+                .signOut();
+            Navigator.pushReplacementNamed(context, '/', arguments: true);
+          },
+        ),
+      ],
+    ),
   );
 }

@@ -83,6 +83,12 @@ class LocationManager {
     return await Geolocator.getCurrentPosition(desiredAccuracy: accuracy);
   }
 
+
+  Position getLastLocation(){
+
+    return null;
+  }
+
   // S'encarreg d'obligar a l'usuari a activar el gps + acceptar localitzacio.
   // un cop tots els requisits son correctes, s'executa el callback
   // i es navega a la ruta home enviant com argument el resultat del callback!

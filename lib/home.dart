@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/FABBottomAppBar.dart';
-import 'package:travely/AnimatedFab.dart';
+import 'file:///C:/Users/Arroy/StudioProjects/Travely/lib/NotUsed/AnimatedFab.dart';
 
 import 'package:google_place/google_place.dart';
+import 'package:travely/TravelyMaps.dart';
 import 'package:travely/model/LocationManager.dart';
+import 'package:travely/ui_utils.dart';
 import 'package:travely/utils.dart';
 
 import 'package:google_fonts/google_fonts.dart';
@@ -28,6 +30,8 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          //Nomes es mostra la burger a bookings. El swipe segueix actiu.
+          leading: _lastPage == 1 ? null : new Container() ,
           centerTitle: true,
           title: Text(
             "Travely",
@@ -35,10 +39,14 @@ class _HomeState extends State<Home> {
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: AnimatedFab(
-          // heroTag: "travel",
-          onPressed: _bottomBarPlaneButton,
+        floatingActionButton: FloatingActionButton(
+          heroTag: "travel",
+          elevation: 5,
+          onPressed: ()  {
+            _bottomBarTabSelected(2);
+          },
           tooltip: 'Search a flight',
+          child: Icon(Icons.flight),
         ),
         bottomNavigationBar: FABBottomAppBar(
             onTabSelected: _bottomBarTabSelected,
@@ -54,6 +62,7 @@ class _HomeState extends State<Home> {
                   tooltipText: 'Your saved destinations'),
             ],
             selectedColor: Colors.red),
+        drawer: homeDrawer(context),
         body: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           // Podem escollir entre moltes... https://medium.com/flutterdevs/page-transitions-in-flutter-5236a8afae92
@@ -73,38 +82,29 @@ class _HomeState extends State<Home> {
     setState(() {
       switch (pageIndex) {
         case 0:
+          // S'ha apretat Trending.
           _animatedWidget = TrendingTab();
           break;
         case 1:
+        // S'ha apretat bookings
           _animatedWidget = Container(
               color: Theme.of(context).primaryColor,
-              child: Column(
-                children: [
-                  //TODO: Posar aquí el printerest
-                  Expanded(
-                      child: PhotoGrid()
-                  ),
-          //        Center(
-          //          child: RaisedButton(
-          //            onPressed: () {
-          //              Provider.of<AuthenticationService>(context, listen: false).signOut();
-          //              Navigator.pushReplacementNamed(context, '/', arguments: true);
-          //              },
-          //            child: Text("LogOut"),
-          //          ))
-          //        ],
+              child: Column(children: [
+                Expanded(child: PhotoGrid()),
               ]));
           break;
-          default:
-            print("Atenció! S'ha apretat un botó no configurat.");
+        case 2:
+          // S'ha apretat el avio
+          _animatedWidget = TravelyMaps();
+          break;
+        default:
+          print("Atenció! S'ha apretat un botó no configurat.");
       }
     });
     _lastPage = pageIndex;
   }
-  Function(int) _bottomBarPlaneButton(buttonIndex) {
-    // Boto de buscar vols
-  }
 }
+
 /*
 Working places example.
 var googlePlace = GooglePlace(googlePlaces);
