@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -101,12 +103,17 @@ class TrendingsModel extends ChangeNotifier {
     Bookings bks = _bookings[_filterSelected];
     Booking current = bks.list[bks.currentPage];
 
+    String username = Provider.of<UserManager>(ctx,listen: false).email.split('@')[0];
+    var ref = FirebaseDatabase.instance.reference().child("${username}/").child(current.id);
+
     if (current.fav) {
       // S'ha de treure de fav
       _bookings.last.list.remove(current);
-    } else {
+      ref.remove();
+    }else{
       // S'ha d'afegir
       _bookings.last.list.add(current);
+      ref.set(current.createSet());
     }
 
     // Toogle del fav.
@@ -495,6 +502,7 @@ class Booking extends ChangeNotifier {
     return {
       'shortOrigin': shortOrigin,
       'shortDestination': shortDestination,
+      'destination': destination,
       'price': price,
       'departureTime': _departureTime
     };

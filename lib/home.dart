@@ -1,16 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:provider/provider.dart';
 import 'package:travely/FABBottomAppBar.dart';
-import 'file:///C:/Users/Arroy/StudioProjects/Travely/lib/NotUsed/AnimatedFab.dart';
 
-import 'package:google_place/google_place.dart';
 import 'package:travely/TravelyMaps.dart';
-import 'package:travely/model/LocationManager.dart';
 import 'package:travely/ui_utils.dart';
-import 'package:travely/utils.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:travely/TrendingTab.dart';
@@ -37,7 +31,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    print("REBUILDING HOME");
     return Scaffold(
         appBar: AppBar(
           //Nomes es mostra la burger a bookings. El swipe segueix actiu.

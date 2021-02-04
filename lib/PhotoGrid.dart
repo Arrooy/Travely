@@ -2,10 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'dart:math';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:provider/provider.dart';
 
-class PhotoGrid extends StatelessWidget {
+import 'model/UserManager.dart';
+
+/*
+OLD ADRIA
   final int numElements = 20;
-
   PhotoGrid(key1):super(key:key1);
 
   @override
@@ -18,14 +22,58 @@ class PhotoGrid extends StatelessWidget {
           Expanded(child: ImageTile(tiles, staggeredTiles)),
         ]));
   }
+ */
 
-  List<Widget> _generateRandomImages(List<StaggeredTile> staggeredTiles) {
+
+class PhotoGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    String username = Provider.of<UserManager>(context, listen: false).email.split('@')[0];
+    return StreamBuilder(
+      stream: FirebaseDatabase.instance.reference().child('${username}/').onValue,
+      builder: (context, snap) {
+        if (snap.hasData && !snap.hasError && snap.data.snapshot.value!=null) {
+          DataSnapshot snapshot = snap.data.snapshot;
+
+          List<_TileInfo> _list = List<_TileInfo>();
+          Map<String, dynamic> _rawdata = Map<String, dynamic>.from(snapshot.value);
+          _rawdata.forEach((key, value) =>
+              _list.add(_TileInfo(
+                  "${value['shortOrigin']}-${value['shortDestination']}",
+                  "${value['price']}€",
+                  value['image']
+              )));
+
+          List<StaggeredTile> staggeredTiles = _generateRandomDistribution(_list.length);
+          List<Widget> tiles = _generateRandomImages(staggeredTiles, _list);
+
+          return snap.data.snapshot.value == null ?
+          SizedBox()
+              :
+          ImageTile(tiles, staggeredTiles);
+        } else return Center(
+            child: Text(
+              'You have no favourite plans yet!',
+              style: TextStyle(
+                color: Colors.white70,
+              ),
+            )
+        );
+      },
+    );
+  }
+
+  List<Widget> _generateRandomImages(List<StaggeredTile> staggeredTiles, List<_TileInfo> info) {
     List<Widget> tiles = List<Widget>();
     for (int i = 0; i < staggeredTiles.length; i++) {
       StaggeredTile st = staggeredTiles[i];
       int type = (st.crossAxisCellCount > 1) ? 3 : ((st.mainAxisCellCount > 1) ? 2 : 1);
       tiles.add(_ImageTile(
-          'https://picsum.photos/${200 + Random().nextInt(50)}/300/?random', type));
+          gridImage: info[i].image,
+          type: type,
+          name: info[i].name,
+          price: info[i].price
+      ));
     }
     return tiles;
   }
@@ -97,7 +145,9 @@ class ImageTile extends StatelessWidget {
 class _ImageTile extends StatelessWidget {
   final gridImage;
   final int type;
-  const _ImageTile(this.gridImage, this.type);
+  final String name;
+  final String price;
+  const _ImageTile({this.gridImage, this.type, this.name, this.price});
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +188,7 @@ class _ImageTile extends StatelessWidget {
             child: Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  'BCN - AMS',
+                  name,
                   style: TextStyle(fontSize: (this.type == 3) ? 17 : 13),
                 )),
           ),
@@ -147,7 +197,7 @@ class _ImageTile extends StatelessWidget {
             child: Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  '456€',
+                  price,
                   style: TextStyle(fontSize: (this.type == 3) ? 17 : 15),
                 )),
           ),
@@ -155,4 +205,11 @@ class _ImageTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _TileInfo {
+  final String name;
+  final String price;
+  final String image;
+  _TileInfo(this.name, this.price, this.image);
 }
