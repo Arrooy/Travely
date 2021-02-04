@@ -8,6 +8,8 @@ class FABBottomAppBarItem {
 }
 
 class FABBottomAppBar extends StatefulWidget {
+
+
   FABBottomAppBar({
     this.items,
     this.centerItemText,
@@ -17,10 +19,12 @@ class FABBottomAppBar extends StatefulWidget {
     this.color,
     this.selectedColor,
     this.notchedShape,
-    this.onTabSelected,
+    this.onTabSelected, this.noButtonSelected,
   }) {
     assert(this.items.length == 2 || this.items.length == 4);
   }
+
+  final bool noButtonSelected;
   final List<FABBottomAppBarItem> items;
   final String centerItemText;
   final double height;
@@ -67,7 +71,6 @@ class FABBottomAppBarState extends State<FABBottomAppBar> {
     );
   }
 
-  // TODO: Posar expanded o no? @msaula decideix.
   Widget _buildMiddleTabItem() {
     return Expanded(
       child: SizedBox(
@@ -92,7 +95,7 @@ class FABBottomAppBarState extends State<FABBottomAppBar> {
     int index,
     ValueChanged<int> onPressed,
   }) {
-    Color color = _selectedIndex == index ? widget.selectedColor : widget.color;
+    Color color = _selectedIndex == index && !widget.noButtonSelected ? widget.selectedColor : widget.color;
     return Expanded(
       child: SizedBox(
         height: widget.height,

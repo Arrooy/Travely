@@ -15,23 +15,33 @@ import 'package:travely/utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:travely/TrendingTab.dart';
 import 'package:travely/PhotoGrid.dart';
-import 'authentication_service.dart';
+
 
 class Home extends StatefulWidget {
+  final PageStorageKey mykey = new PageStorageKey("aKey");
+
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  Widget _animatedWidget = TrendingTab();
-  int _lastPage = 0;
+  int _currentTab = 0;
+
+  final List<Widget> pages = <Widget>[
+    TrendingTab(new PageStorageKey<String>("key1")),
+    PhotoGrid(new PageStorageKey<String>("key2")),
+    TravelyMaps(new PageStorageKey<String>("key3"))
+  ];
+
+  final PageStorageBucket _bucket = PageStorageBucket();
 
   @override
   Widget build(BuildContext context) {
+    print("REBUILDING HOME");
     return Scaffold(
         appBar: AppBar(
           //Nomes es mostra la burger a bookings. El swipe segueix actiu.
-          leading: _lastPage == 1 ? null : new Container() ,
+          leading: _currentTab == 1 ? null : new Container(),
           centerTitle: true,
           title: Text(
             "Travely",
@@ -41,14 +51,16 @@ class _HomeState extends State<Home> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
           heroTag: "travel",
+          backgroundColor: _currentTab == 2 ? Colors.red : Colors.grey,
           elevation: 5,
-          onPressed: ()  {
+          onPressed: () {
             _bottomBarTabSelected(2);
           },
           tooltip: 'Search a flight',
           child: Icon(Icons.flight),
         ),
         bottomNavigationBar: FABBottomAppBar(
+            noButtonSelected: _currentTab == 2,
             onTabSelected: _bottomBarTabSelected,
             notchedShape: CircularNotchedRectangle(),
             items: [
@@ -63,57 +75,19 @@ class _HomeState extends State<Home> {
             ],
             selectedColor: Colors.red),
         drawer: homeDrawer(context),
-        body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          // Podem escollir entre moltes... https://medium.com/flutterdevs/page-transitions-in-flutter-5236a8afae92
-          transitionBuilder: (Widget child, Animation<double> animation) =>
-              FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-          child: _animatedWidget,
-        ));
+        body: PageStorage(
+          child: pages[_currentTab],
+          bucket: _bucket,
+          key: widget.mykey,
+        )
+    );
   }
 
   void _bottomBarTabSelected(pageIndex) {
     // Botons de la barra de navegacio
-    if (_lastPage == pageIndex) return;
-
     setState(() {
-      switch (pageIndex) {
-        case 0:
-          // S'ha apretat Trending.
-          _animatedWidget = TrendingTab();
-          break;
-        case 1:
-        // S'ha apretat bookings
-          _animatedWidget = Container(
-              color: Theme.of(context).primaryColor,
-              child: Column(children: [
-                Expanded(child: PhotoGrid()),
-              ]));
-          break;
-        case 2:
-          // S'ha apretat el avio
-          _animatedWidget = TravelyMaps();
-          break;
-        default:
-          print("Atenció! S'ha apretat un botó no configurat.");
-      }
+      _currentTab = pageIndex;
     });
-    _lastPage = pageIndex;
   }
 }
 
-/*
-Working places example.
-var googlePlace = GooglePlace(googlePlaces);
-          var result = await googlePlace.search.getNearBySearch(
-              Location(lat: -33.8670522, lng: 151.1957362), 1500,
-              type: "restaurant");
-
-          print(result.status);
-          print(result.results.length);
-          print(result.results.first.name);
-
- */

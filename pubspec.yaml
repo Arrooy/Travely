@@ -29,6 +29,7 @@ dependencies:
   geolocator: ^6.1.14 # Per localitzacio del usuari
   provider: ^4.3.3 # Per state management
   intl: ^0.16.1 # Per date fromat
+  flutter_spinkit: ^4.1.2+1 #Loading icons.
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,8 @@
-import 'dart:math';
-import 'package:chewie/chewie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+
 import 'package:provider/provider.dart';
 import 'package:travely/authentication_service.dart';
 import 'package:travely/model/LocationManager.dart';
@@ -86,7 +83,7 @@ class _LogInScreenState extends State<LogInScreen> {
         Provider.of<UserManager>(context,listen: false).email = user.email;
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _signInCorrect(context);
+          _beforeSignInCheck(context: context);
         });
       }
     }
@@ -96,7 +93,7 @@ class _LogInScreenState extends State<LogInScreen> {
       body: Stack(
         children: [
           backgroundVideo,
-          SignInSignUp(onPressed: _processSignIn)
+          SignInSignUp(onPressed: _beforeSignInCheck)
         ],
       ),
       backgroundColor: Colors.white,
@@ -111,15 +108,23 @@ class _LogInScreenState extends State<LogInScreen> {
       Scaffold.of(context).showSnackBar(snackBarSimple(result));
       return;
     }
-
-    await _signInCorrect(context);
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
-  void _signInCorrect(BuildContext context) async{
+  void _beforeSignInCheck({BuildContext context, String email, String password, bool isSignUp}) async{
     // Si tota la config de localitzaico es correcte, s'executa el callback
     LocationManager locationManager =
     Provider.of<LocationManager>(context, listen: false);
-    await locationManager.mustHaveLocationDialogs(context);
+    await locationManager.mustHaveLocationDialogs(context, (){
+
+      if(email != null && password != null){
+        //Sha de fer SignIn/SignUp
+        _processSignIn(context: context,email: email,password: password,isSignUp: isSignUp);
+      }else{
+        // Usuari ja està autenticat. Entrem directament.
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    });
   }
 
   @override

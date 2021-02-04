@@ -21,9 +21,7 @@ class _HashtagBarState extends State<HashtagBar> {
   List<Hashtag> hashtags;
   bool _smallBar;
 
-  int _selectedHashtag;
-
-  _HashtagBarState(this._smallBar) : _selectedHashtag = 0;
+  _HashtagBarState(this._smallBar);
 
   void _scrollListener() {
     if (_scrollController.offset >=
@@ -58,6 +56,7 @@ class _HashtagBarState extends State<HashtagBar> {
   }
 
   Widget _buildHashtagBar() {
+
     return Container(
         alignment: _smallBar ? Alignment.centerLeft : Alignment.center,
         height: 50,
@@ -94,18 +93,12 @@ class _HashtagBarState extends State<HashtagBar> {
   }
 
   void _onPressed(index, context) {
-    Provider.of<TrendingsModel>(context, listen: false).filterSelected = index;
-
-    // hashtags[_selectedHashtag] = Hashtag.update(hashtags[_selectedHashtag], false);
-    // hashtags[index] = Hashtag.update(hashtags[index], true);
-    //
-    // _selectedHashtag = index;
-    // setState(() {});
+    if(!_smallBar) Provider.of<TrendingsModel>(context, listen: false).onHashtagPressed(context,index);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ShaderMask(
+    return _smallBar ? _buildHashtagBar() : ShaderMask(
       shaderCallback: (Rect bounds) {
         return LinearGradient(
           begin: Alignment.centerLeft,

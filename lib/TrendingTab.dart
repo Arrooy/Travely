@@ -7,40 +7,62 @@ import 'package:travely/TrendPage.dart';
 import 'package:travely/ui_utils.dart';
 
 import 'model/Booking.dart';
+
+import 'dart:async';
 import 'model/LocationManager.dart';
 
-class TrendingTab extends StatelessWidget {
+class TrendingTab extends StatefulWidget {
+  TrendingTab(key1):super(key:key1);
+
+
+  @override
+  _TrendingTabState createState() => _TrendingTabState();
+}
+
+class _TrendingTabState extends State<TrendingTab> {
+
+ Future _trendingModelReady;
+
+  @override
+  void initState() {
+    super.initState();
+    _trendingModelReady = Provider.of<TrendingsModel>(context, listen: false).requestAndUpdateData(context);
+  }
 
   @override
   Widget build(BuildContext context) {
 
-      return FutureBuilder <bool>(
-          future: Provider.of<TrendingsModel>(context,listen: false).requestAndUpdateData(context),
-          builder: (BuildContext context,  AsyncSnapshot<bool> snapshot) {
+    return FutureBuilder <bool>(
+        future: _trendingModelReady,
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.hasData && snapshot.data) {
+            return Stack(children: [
+              PageView.builder(
+                controller: Provider
+                    .of<TrendingsModel>(context, listen: false)
+                    .pageViewController,
+                scrollDirection: Axis.vertical,
+                itemBuilder: (context, position) {
+                  // Modifiquem el model amb el trend page actual.
+                  Provider
+                      .of<TrendingsModel>(context, listen: false)
+                      .newTrendPageIndex(position,context);
 
-            if (snapshot.hasData && snapshot.data) {
+                  //Pintem el trendPage
+                  return TrendPage();
+                },
+              ),
+              HashtagBar(Provider
+                  .of<TrendingsModel>(context, listen: false)
+                  .options, false),
+            ]);
+          } else
+          if (snapshot.hasError || (snapshot.data != null && !snapshot.data)) {
+            return futureError(snapshot.error);
+          }
 
-                return Stack(children: [
-
-                  PageView.builder(
-                    scrollDirection: Axis.vertical,
-
-                    itemBuilder: (context, position) {
-                      // Modifiquem el model amb el trend page actual.
-                      Provider.of<TrendingsModel>(context, listen: false).newTrendPageIndex = position;
-
-                      //Pintem el trendPage
-                      return TrendPage();
-                    },
-                  ),
-                  HashtagBar(Provider.of<TrendingsModel>(context, listen:false).options, false),
-                ]);
-
-            } else if (snapshot.hasError ||(snapshot.data != null &&  !snapshot.data)) {
-              return futureError(snapshot.error);
-            }
-
-            return futureLoading('Awaiting destinations...');
-          });
+          return futureLoading('Awaiting destinations...');
+        });
   }
+
 }

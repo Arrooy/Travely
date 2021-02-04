@@ -6,11 +6,17 @@ import 'dart:math';
 class PhotoGrid extends StatelessWidget {
   final int numElements = 20;
 
+  PhotoGrid(key1):super(key:key1);
+
   @override
   Widget build(BuildContext context) {
     List<StaggeredTile> staggeredTiles = _generateRandomDistribution(numElements);
     List<Widget> tiles = _generateRandomImages(staggeredTiles);
-    return ImageTile(tiles, staggeredTiles);
+    return Container(
+        color: Theme.of(context).primaryColor,
+        child: Column(children: [
+          Expanded(child: ImageTile(tiles, staggeredTiles)),
+        ]));
   }
 
   List<Widget> _generateRandomImages(List<StaggeredTile> staggeredTiles) {

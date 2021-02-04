@@ -9,6 +9,8 @@ import 'package:travely/ui_utils.dart';
 import 'model/LocationManager.dart';
 
 class TravelyMaps extends StatefulWidget {
+  TravelyMaps(key1):super(key:key1);
+
   @override
   _TravelyMaps createState() => _TravelyMaps();
 }

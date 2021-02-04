@@ -83,23 +83,17 @@ class LocationManager {
     return await Geolocator.getCurrentPosition(desiredAccuracy: accuracy);
   }
 
-
-  Position getLastLocation(){
-
-    return null;
-  }
-
   // S'encarreg d'obligar a l'usuari a activar el gps + acceptar localitzacio.
   // un cop tots els requisits son correctes, s'executa el callback
   // i es navega a la ruta home enviant com argument el resultat del callback!
-  void mustHaveLocationDialogs(BuildContext context) async {
+  void mustHaveLocationDialogs(BuildContext context, void Function() callback) async {
 
     await init();
 
     switch (await checkPermisions()) {
       case PermissionError.allOk:
         // Tot correcte. No es mostra cap dialeg.
-        Navigator.pushReplacementNamed(context, '/home');
+        callback();
         break;
       case PermissionError.permissionsDenied:
       // Mostrem un dialeg indicant que es necessari acceptar.
@@ -110,12 +104,12 @@ class LocationManager {
             "Open permission dialog", () async {
           PermissionError result = await requestPermission();
           if (result == PermissionError.allOk) {
-            Navigator.pushReplacementNamed(context, '/home');
+            callback();
           }else{
-            Scaffold.of(context).showSnackBar(snackBar("Please accept the location permissions!","Solve", context, (context) => mustHaveLocationDialogs(context)));
+            Scaffold.of(context).showSnackBar(snackBar("Please accept the location permissions!","Solve", context, (context) => mustHaveLocationDialogs(context,callback)));
           }
         },popCallback:(){
-          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please accept the location permissions!","Solve", context, (context) => mustHaveLocationDialogs(context)));
+          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please accept the location permissions!","Solve", context, (context) => mustHaveLocationDialogs(context, callback)));
         });
         break;
       case PermissionError.permissionsDeniedForever:
@@ -130,7 +124,7 @@ class LocationManager {
           openSettings();
         },
             popCallback: (){
-              Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn.\nPlease accept the location permissions from your system settings!","Open dialog", context, (context) => mustHaveLocationDialogs(context)));
+              Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn.\nPlease accept the location permissions from your system settings!","Open dialog", context, (context) => mustHaveLocationDialogs(context,callback)));
             });
 
         break;
@@ -142,7 +136,7 @@ class LocationManager {
             "Travely needs location services",
             "This app uses your location to suggest the best places to travel to.\n\nPlease activate the device location!",
             "Open system settings",(){openSettings();},popCallback: (){
-          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please activate the device location!","Open dialog", context, (context) => mustHaveLocationDialogs(context)));
+          Scaffold.of(context).showSnackBar(snackBar("Unable to SignIn. Please activate the device location!","Open dialog", context, (context) => mustHaveLocationDialogs(context,callback)));
         });
 
         break;

@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/authentication_service.dart';
-
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 class TlyButton extends StatelessWidget {
   final String text;
   final Function onPressed;
@@ -104,6 +104,15 @@ Widget snackBarSimple(String message) {
   );
 }
 
+Widget futureInlineLoading() {
+  return Row(
+    mainAxisSize: MainAxisSize.max,
+    children: <Widget>[SpinKitThreeBounce(
+        size: 50,
+        color: Colors.white,
+      )],
+  );
+}
 
 
 Widget futureLoading(String message) {
