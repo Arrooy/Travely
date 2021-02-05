@@ -156,17 +156,22 @@ class TrendingsModel extends ChangeNotifier {
 
     Bookings popularDest =
         await Tequila.searchPopularDestinations(pos, nearAirports, resultLimit,ctx);
+    print("searchPopularDestinations done!");
     Bookings cheapestTravel =
         await Tequila.searchCheapestTravel(pos, nearAirports, resultLimit,ctx);
+    print("searchCheapestTravel done!");
     Bookings weekendScape =
         await Tequila.searchWeekendScape(pos, nearAirports, resultLimit,ctx);
+    print("searchWeekendScape done!");
     Bookings bestQuality =
         await Tequila.searchBestQuality(pos, nearAirports, resultLimit,ctx);
+    print("searchBestQuality done!");
     Bookings shortFlight =
         await Tequila.searchShortFlight(pos, nearAirports, resultLimit,ctx);
+    print("searchShortFlight done!");
     Bookings lastMinute =
         await Tequila.searchLastMinute(pos, nearAirports, resultLimit,ctx);
-
+    print("searchLastMinute done!");
 
     _bookings.add(popularDest);
     _bookings.add(cheapestTravel);

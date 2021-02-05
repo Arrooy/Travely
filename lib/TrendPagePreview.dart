@@ -105,7 +105,18 @@ class _TrendPagePreviewState extends State<TrendPagePreview> {
                                   ),
                                 )
                               ]),
-                          Text(widget.booking.departureTime,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32)),
+                        Row(mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [Expanded(
+                            flex:6,
+                            child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: Text(widget.booking.departureTime,style: TextStyle(fontWeight: FontWeight.bold))
+                            )),
+                          Expanded(
+                              flex:4,
+                              child:Container()
+                          )]),
 
                           FutureBuilder<List<String>>(
                               future: widget.booking.hashtags,

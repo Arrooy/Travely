@@ -103,7 +103,13 @@ class TrendPage extends StatelessWidget {
                               },)
                             ]),
                         Consumer<TrendingsModel>(builder: (ctx,m,c){
-                          return Text(m.current.departureTime,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32));
+                          return Expanded(
+                            flex:0,
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: Text(m.current.departureTime,style: TextStyle(fontWeight: FontWeight.bold))
+                            ),
+                          );
                         },),
 
                         Consumer<TrendingsModel>(builder: (ctx,m,c){
