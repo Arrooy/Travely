@@ -22,7 +22,7 @@ import 'model/Booking.dart';
 
 class Tequila{
 
-  static searchPopularDestinations(
+  static Future<Bookings> searchPopularDestinations(
       Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
     List<Booking> bookingList = [];
 
@@ -35,7 +35,7 @@ class Tequila{
     return Bookings(bookingList,context);
   }
 
-  static searchCheapestTravel(
+  static Future<Bookings> searchCheapestTravel(
       Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
 
     List<Booking> bookingList = [];
@@ -46,7 +46,7 @@ class Tequila{
     return Bookings(bookingList,context);
   }
 
-  static searchShortFlight(
+  static Future<Bookings> searchShortFlight(
       Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
     List<Booking> bookingList = [];
     bookingList = await searchFlightsToDestinations(nearAirports,
@@ -56,7 +56,7 @@ class Tequila{
     return Bookings(bookingList,context);
   }
 
-  static searchBestQuality(
+  static Future<Bookings> searchBestQuality(
       Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
     List<Booking> bookingList = [];
     bookingList = await searchFlightsToDestinations(nearAirports,
@@ -66,7 +66,7 @@ class Tequila{
     return Bookings(bookingList,context);
   }
 
-  static searchWeekendScape(
+  static Future<Bookings> searchWeekendScape(
       Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
     List<Booking> bookingList = [];
     bookingList = await searchFlightsToDestinations(nearAirports,
@@ -76,7 +76,7 @@ class Tequila{
     return Bookings(bookingList,context);
   }
 
-  static searchLastMinute(
+  static Future<Bookings> searchLastMinute(
       Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
     List<Booking> bookingList = [];
     bookingList = await searchFlightsToDestinations(nearAirports,

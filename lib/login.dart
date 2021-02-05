@@ -4,8 +4,8 @@ import 'package:travely/ui_utils.dart';
 
 class SignInSignUp extends StatefulWidget {
   final Function onPressed;
-  final emailController = TextEditingController(text:"miquelsaula@gmail.com");
-  final passwordController = TextEditingController(text: "123456");
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   SignInSignUp({this.onPressed});
 

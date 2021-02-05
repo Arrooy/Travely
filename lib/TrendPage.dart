@@ -8,14 +8,18 @@ import 'package:travely/ui_utils.dart';
 
 import 'model/Booking.dart';
 
-class TrendPage extends StatelessWidget {
+class TrendPage extends StatefulWidget {
+  @override
+  _TrendPageState createState() => _TrendPageState();
+}
+
+class _TrendPageState extends State<TrendPage> {
   @override
   Widget build(BuildContext context) {
     Booking current = Provider.of<TrendingsModel>(context, listen: false).current;
 
     // Mostra l'imatge de end quan no hi han mes dades al model.
     if(current != null && current.isEnd != null && current.isEnd){
-
       return Image.network("https://cdn.dopl3r.com//media/memes_files/you-have-reached-the-end-of-the-internet-turn-around-mlcEK.jpg");
     }else{
       return GestureDetector(
@@ -27,18 +31,19 @@ class TrendPage extends StatelessWidget {
             Container(
                 height: double.infinity,
                 width: double.infinity,
-
-
                 child: Consumer<TrendingsModel>(builder: (ctx,m,c){
 
                   return FutureBuilder<Uint8List>(
                       future: m.current.image,
                       builder: (context,snapshot){
-
+                        print(snapshot);
                         if (snapshot.hasData && snapshot.connectionState == ConnectionState.done){
                           return Image.memory(snapshot.data, fit: BoxFit.cover);
                         } else if (snapshot.hasError) {
-                          return futureError(snapshot.error);
+                          return futureError("Image not available");
+                        }else if( snapshot.connectionState == ConnectionState.done){
+                          // no te cap sentit que no retorni res google. nomes ens pasa amb el simulador.
+                          return Container(child:Center(child: Text("Image no available...")));
                         }
 
                         return futureLoading("Loading the best image from ${m.current.destination}");
@@ -119,7 +124,7 @@ class TrendPage extends StatelessWidget {
                                 if (snapshot.hasData && snapshot.connectionState == ConnectionState.done){
                                   return HashtagBar(snapshot.data, true);
                                 } else if (snapshot.hasError) {
-                                  return futureError(snapshot.error);
+                                  return futureError("Hashtags not available");
                                 }
                                 return futureInlineLoading(false);
                               });

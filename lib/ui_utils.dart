@@ -162,7 +162,7 @@ Widget futureError(error,{int size}){
           ),
           Padding(
             padding: const EdgeInsets.only(top: 16),
-            child: Text('Error: $error'),
+            child: Text('$error'),
           )
         ],
       ),

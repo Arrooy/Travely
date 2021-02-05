@@ -43,6 +43,9 @@ Future<Uint8List> requestImageFromGoogle(String destination, BuildContext contex
   if(result != null && result.status == "OK" && result.candidates != null && result.candidates.length >= 1 && result.candidates.first.photos != null && result.candidates.first.photos.length >= 1){
     // Tenim una foto de google places.
     print("Getting image from $destination using google");
+    print(result.status);
+    print(result.candidates.first.photos.first.width);
+    print(result.candidates.first.photos.first.height);
     return googlePlace.photos.get(result.candidates.first.photos.first.photoReference,getPhoneHeight(context).toInt(),getPhoneWidth(context).toInt());
   }else{
     // Fallback ->  agafem una foto de pexels.
@@ -61,7 +64,6 @@ Future<Uint8List> requestImageFromGoogle(String destination, BuildContext contex
       }
 
     }).catchError((error){
-      print("Error! $error");
       return Future.error("We have no fotos of $destination");
     });
   }

@@ -37,7 +37,9 @@ class PhotoGrid extends StatelessWidget {
                   "${value['shortOrigin']}-${value['shortDestination']}",
                   key,
                   "${value['price']}€",
-                  requestImageFromGoogle(value['destination'], context)
+                  requestImageFromGoogle(value['destination'], context),
+                  value['destination'],
+                  value['departureTime']
               ));
           });
 
@@ -70,7 +72,9 @@ class PhotoGrid extends StatelessWidget {
           type: type,
           name: info[i].name,
           price: info[i].price,
-          id: info[i].id
+          id: info[i].id,
+          destination:info[i].fullName,
+          departureTime:info[i].departureTime
       ));
     }
     return tiles;
@@ -146,7 +150,9 @@ class ImageTile extends StatefulWidget {
   final String name;
   final String price;
   final String id;
-  const ImageTile({this.gridImage, this.type, this.name, this.price, this.id});
+  final String destination;
+  final String departureTime;
+  const ImageTile({this.gridImage, this.type, this.name, this.price, this.id, this.destination, this.departureTime});
 
   @override
   _ImageTileState createState() => _ImageTileState();
@@ -171,14 +177,21 @@ class _ImageTileState extends State<ImageTile> {
         },
         onTap: (){
           // Implementació de la preview desde bookings. Al final no s'afegeix a l'entrega.
-          // Booking bk = new Booking();
-          // bk.destination = widget.name;
-          // bk.price = int.parse(widget.price.substring(0,1));
-          // bk.image = widget.gridImage;
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => TrendPagePreview(bk)),
-          // );
+          Booking bk = new Booking();
+          bk.id = widget.id;
+          bk.destination = widget.destination;
+          bk.price = int.parse(widget.price.substring(0,1));
+          bk.image = widget.gridImage;
+          bk.shortDestination = widget.name.substring( widget.name.length - 3 , widget.name.length);
+          print("SHORT IS ${bk.shortDestination}");
+          bk.setDepartureTime = DateTime.parse(widget.departureTime);
+          bk.fav = true;
+          bk.isEnd = false;
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TrendPagePreview(bk)),
+          );
         },
         child: Stack(children: [
 
@@ -198,7 +211,7 @@ class _ImageTileState extends State<ImageTile> {
                   ),
                 );
               } else if (snapshot.hasError) {
-                return futureError(snapshot.error,size: 10);
+                return futureError("Image not available",size: 10);
               }
 
               return futureInlineLoading(true,size: 10);
@@ -245,10 +258,12 @@ class _ImageTileState extends State<ImageTile> {
 
 class _TileInfo {
   final String name;
+  final String fullName;
   final String id;
   final String price;
+  final String departureTime;
 //  final String imageName;
   Future<Uint8List> image;
 
-  _TileInfo(this.name,this.id, this.price, this.image);
+  _TileInfo(this.name,this.id, this.price, this.image, this.fullName, this.departureTime);
 }

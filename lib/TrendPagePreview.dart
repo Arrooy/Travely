@@ -45,7 +45,7 @@ class _TrendPagePreviewState extends State<TrendPagePreview> {
                         if (snapshot.hasData && snapshot.connectionState == ConnectionState.done){
                           return Image.memory(snapshot.data, fit: BoxFit.cover);
                         } else if (snapshot.hasError) {
-                          return futureError(snapshot.error);
+                          return futureError("Image not available");
                         }
 
                         return futureLoading("Loading ${widget.booking.destination}");
@@ -108,13 +108,13 @@ class _TrendPagePreviewState extends State<TrendPagePreview> {
                         Row(mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [Expanded(
-                            flex:6,
+                            flex:8,
                             child: FittedBox(
                                 fit: BoxFit.cover,
-                                child: Text(widget.booking.departureTime,style: TextStyle(fontWeight: FontWeight.bold))
+                                child: Text(widget.booking.departureTime != null ? widget.booking.departureTime : "",style: TextStyle(fontWeight: FontWeight.bold))
                             )),
                           Expanded(
-                              flex:4,
+                              flex:2,
                               child:Container()
                           )]),
 
@@ -124,7 +124,7 @@ class _TrendPagePreviewState extends State<TrendPagePreview> {
                                 if (snapshot.hasData && snapshot.connectionState == ConnectionState.done){
                                   return HashtagBar(snapshot.data, true);
                                 } else if (snapshot.hasError) {
-                                  return futureError(snapshot.error);
+                                  return futureError("Hashtags not available");
                                 }
                                 return futureInlineLoading(false);
                               })

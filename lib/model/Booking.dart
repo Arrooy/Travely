@@ -74,12 +74,10 @@ class TrendingsModel extends ChangeNotifier {
       }
     }
 
-    // Borrem totes les fotos (Menys les primeres 2) per no gastar tota la memoria del telef.
+    // Borrem totes les fotos per no gastar tota la memoria del telef.
     // En un rato el garbage collector s'ocupará.
-    int i = 0;
     for (var bk in _bookings[_filterSelected].list){
-      if(i > 1) bk.image = null;
-      i++;
+      bk.image = null;
     }
 
     _filterSelected = index;
@@ -154,31 +152,30 @@ class TrendingsModel extends ChangeNotifier {
 
     List<String> nearAirports = await Tequila.searchAirportsNearPos(pos, airportLimit);
 
-    Bookings popularDest =
-        await Tequila.searchPopularDestinations(pos, nearAirports, resultLimit,ctx);
-    print("searchPopularDestinations done!");
-    Bookings cheapestTravel =
-        await Tequila.searchCheapestTravel(pos, nearAirports, resultLimit,ctx);
-    print("searchCheapestTravel done!");
-    Bookings weekendScape =
-        await Tequila.searchWeekendScape(pos, nearAirports, resultLimit,ctx);
-    print("searchWeekendScape done!");
-    Bookings bestQuality =
-        await Tequila.searchBestQuality(pos, nearAirports, resultLimit,ctx);
-    print("searchBestQuality done!");
-    Bookings shortFlight =
-        await Tequila.searchShortFlight(pos, nearAirports, resultLimit,ctx);
-    print("searchShortFlight done!");
-    Bookings lastMinute =
-        await Tequila.searchLastMinute(pos, nearAirports, resultLimit,ctx);
-    print("searchLastMinute done!");
+    Future<Bookings> popularDest =
+        Tequila.searchPopularDestinations(pos, nearAirports, resultLimit,ctx);
 
-    _bookings.add(popularDest);
-    _bookings.add(cheapestTravel);
-    _bookings.add(weekendScape);
-    _bookings.add(bestQuality);
-    _bookings.add(shortFlight);
-    _bookings.add(lastMinute);
+    Future<Bookings> cheapestTravel =
+        Tequila.searchCheapestTravel(pos, nearAirports, resultLimit,ctx);
+
+    Future<Bookings> weekendScape =
+        Tequila.searchWeekendScape(pos, nearAirports, resultLimit,ctx);
+
+    Future<Bookings> bestQuality =
+        Tequila.searchBestQuality(pos, nearAirports, resultLimit,ctx);
+
+    Future<Bookings> shortFlight =
+        Tequila.searchShortFlight(pos, nearAirports, resultLimit,ctx);
+
+    Future<Bookings> lastMinute =
+        Tequila.searchLastMinute(pos, nearAirports, resultLimit,ctx);
+
+    _bookings.add(await popularDest);
+    _bookings.add(await cheapestTravel);
+    _bookings.add(await weekendScape);
+    _bookings.add(await bestQuality);
+    _bookings.add(await shortFlight);
+    _bookings.add(await lastMinute);
     return true;
   }
 
@@ -276,6 +273,8 @@ class Booking extends ChangeNotifier {
 
     if(this.destination == null) return;
     String username = Provider.of<UserManager>(context,listen: false).email.split('@')[0];
+
+    if(username == null || username == "")return;
     var ref = FirebaseDatabase.instance.reference().child("$username/").child(id);
     var result = await ref.once();
     this.fav = (result.value != null);
@@ -283,6 +282,10 @@ class Booking extends ChangeNotifier {
 
   void endOfData() {
     this.isEnd = true;
+  }
+
+  set setDepartureTime(DateTime value) {
+    _departureTime = value;
   }
 
   String get departureTime {
@@ -301,7 +304,8 @@ class Booking extends ChangeNotifier {
       'shortOrigin': shortOrigin,
       'shortDestination': shortDestination,
       'destination': destination,
-      'price': price
+      'price': price,
+      'departureTime': _departureTime.toIso8601String()
     };
   }
 

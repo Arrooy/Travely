@@ -108,7 +108,14 @@ class _LogInScreenState extends State<LogInScreen> {
       Scaffold.of(context).showSnackBar(snackBarSimple(result));
       return;
     }
-    Navigator.pushReplacementNamed(context, '/home');
+
+    User user = Provider.of<User>(context, listen: false);
+    if (user != null) {
+      Provider
+          .of<UserManager>(context, listen: false)
+          .email = user.email;
+    }
+    Navigator.pushReplacementNamed(context, '/home',arguments: true);
   }
 
   void _beforeSignInCheck({BuildContext context, String email, String password, bool isSignUp}) async{
@@ -122,7 +129,7 @@ class _LogInScreenState extends State<LogInScreen> {
         _processSignIn(context: context,email: email,password: password,isSignUp: isSignUp);
       }else{
         // Usuari ja està autenticat. Entrem directament.
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/home',arguments:  true);
       }
     });
   }
