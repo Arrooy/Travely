@@ -142,24 +142,33 @@ Widget futureLoading(String message) {
 }
 
 
-Widget futureError(error){
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Icon(
-          Icons.error_outline,
-          color: Colors.red,
-          size: 60,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: Text('Error: $error'),
-        )
-      ],
-    ),
-  );
+Widget futureError(error,{int size}){
+  if(size != null){
+    return Center( child:Icon(
+      Icons.error_outline,
+      color: Colors.red,
+      size: 60,
+    ));
+  }else{
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            Icons.error_outline,
+            color: Colors.red,
+            size: 60,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Text('Error: $error'),
+          )
+        ],
+      ),
+    );
+  }
+
 }
 
 

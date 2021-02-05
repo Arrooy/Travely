@@ -10,6 +10,7 @@ import 'package:google_place/google_place.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/model/UserManager.dart';
+import 'package:travely/tequila.dart';
 import 'package:travely/utils.dart';
 
 import 'LocationManager.dart';
@@ -106,24 +107,28 @@ class TrendingsModel extends ChangeNotifier {
     }
   }
 
-  void favButton(BuildContext ctx) {
-    String username = Provider.of<UserManager>(ctx,listen: false).email.split('@')[0];
-    var ref = FirebaseDatabase.instance.reference().child("$username/").child(current.id);
+  // Si bk esta definit comporta que volem donar like a bk i no al current id.
+  // S'empra bk quan l'uusari interactua amb una preview.
+  void favButton(BuildContext ctx, {Booking bk}) {
+    Booking workingBooking = bk == null ? current : bk;
 
-    if (current.fav) {
+    String username = Provider.of<UserManager>(ctx,listen: false).email.split('@')[0];
+    var ref = FirebaseDatabase.instance.reference().child("$username/").child(workingBooking.id);
+
+    if (workingBooking.fav) {
       // S'ha de treure de fav
       ref.remove();
 
-      print("Disliked ${current.destination}");
+      print("Disliked ${workingBooking.destination}");
     }else{
       // S'ha d'afegir
-      ref.set(current.createSet());
+      ref.set(workingBooking.createSet());
 
-      print("liked ${current.destination}");
+      print("liked ${workingBooking.destination}");
     }
 
     // Toogle del fav.
-    current.favButton();
+    workingBooking.favButton();
     notifyListeners();
   }
 
@@ -147,20 +152,20 @@ class TrendingsModel extends ChangeNotifier {
     int airportLimit = 5;
     int resultLimit = 5;
 
-    List<String> nearAirports = await searchAirportsNearPos(pos, airportLimit);
+    List<String> nearAirports = await Tequila.searchAirportsNearPos(pos, airportLimit);
 
     Bookings popularDest =
-        await searchPopularDestinations(pos, nearAirports, resultLimit,ctx);
+        await Tequila.searchPopularDestinations(pos, nearAirports, resultLimit,ctx);
     Bookings cheapestTravel =
-        await searchCheapestTravel(pos, nearAirports, resultLimit,ctx);
+        await Tequila.searchCheapestTravel(pos, nearAirports, resultLimit,ctx);
     Bookings weekendScape =
-        await searchWeekendScape(pos, nearAirports, resultLimit,ctx);
+        await Tequila.searchWeekendScape(pos, nearAirports, resultLimit,ctx);
     Bookings bestQuality =
-        await searchBestQuality(pos, nearAirports, resultLimit,ctx);
+        await Tequila.searchBestQuality(pos, nearAirports, resultLimit,ctx);
     Bookings shortFlight =
-        await searchShortFlight(pos, nearAirports, resultLimit,ctx);
+        await Tequila.searchShortFlight(pos, nearAirports, resultLimit,ctx);
     Bookings lastMinute =
-        await searchLastMinute(pos, nearAirports, resultLimit,ctx);
+        await Tequila.searchLastMinute(pos, nearAirports, resultLimit,ctx);
 
 
     _bookings.add(popularDest);
@@ -172,242 +177,6 @@ class TrendingsModel extends ChangeNotifier {
     return true;
   }
 
-  searchPopularDestinations(
-      Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
-    List<Booking> bookingList = [];
-
-    List<String> popularDestinations =
-        await bestDestinationsFromNearAirports(nearAirports, resultLimit);
-    bookingList = await searchFlightsToDestinations(nearAirports,
-        popularDestinations: popularDestinations);
-
-    bookingList.add(Booking()..endOfData());
-    return Bookings(bookingList,context);
-  }
-
-  searchCheapestTravel(
-      Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
-    List<Booking> bookingList = [];
-    bookingList = await searchFlightsToDestinations(nearAirports,
-        sort: "price", dayRange: 7);
-
-    bookingList.add(Booking()..endOfData());
-    return Bookings(bookingList,context);
-  }
-
-  searchShortFlight(
-      Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
-    List<Booking> bookingList = [];
-    bookingList = await searchFlightsToDestinations(nearAirports,
-        sort: "duration", dayRange: 7);
-
-    bookingList.add(Booking()..endOfData());
-    return Bookings(bookingList,context);
-  }
-
-  searchBestQuality(
-      Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
-    List<Booking> bookingList = [];
-    bookingList = await searchFlightsToDestinations(nearAirports,
-        sort: "quality", dayRange: 7);
-
-    bookingList.add(Booking()..endOfData());
-    return Bookings(bookingList,context);
-  }
-
-  searchWeekendScape(
-      Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
-    List<Booking> bookingList = [];
-    bookingList = await searchFlightsToDestinations(nearAirports,
-        onlyWeekends: true, sort: "date", dayRange: 7);
-
-    bookingList.add(Booking()..endOfData());
-    return Bookings(bookingList,context);
-  }
-
-  searchLastMinute(
-      Position pos, List<String> nearAirports, int resultLimit, BuildContext context) async {
-    List<Booking> bookingList = [];
-    bookingList = await searchFlightsToDestinations(nearAirports,
-        sort: "date", dayRange: 0);
-    if(bookingList.length < 3){
-      //Repetim la solicitud amb 1 dia més.
-      bookingList.addAll(await searchFlightsToDestinations(nearAirports,
-          sort: "date", dayRange: 1));
-    }
-    bookingList.add(Booking()..endOfData());
-    return Bookings(bookingList,context);
-  }
-
-  // Helpers per agafar les dades:
-  Future<List<Booking>> searchFlightsToDestinations(List<String> nearAirports,
-      {List<String> popularDestinations,
-      String sort,
-      bool onlyWeekends,
-      int dayRange}) async {
-    List<Booking> bookingList = [];
-
-    //Aeroports de sortida -> format de la Api: A,B,C
-    String nearAirportsReq = nearAirports.toString().replaceAll(" ", "");
-    nearAirportsReq = nearAirportsReq.substring(1, nearAirportsReq.length - 1);
-
-    // Busquem vols desde avui, fins d'aqui 7 dies
-    var now = new DateTime.now();
-    var formatter = new DateFormat('dd/MM/yyyy');
-
-    var oneWeekFromNow = dayRange != null
-        ? now.add(new Duration(days: dayRange))
-        : now.add(new Duration(days: 30));
-
-    Map<String, dynamic> requestDefinition = {
-      "fly_from": nearAirportsReq,
-      "dateFrom": formatter.format(now),
-      "dateTo": formatter.format(oneWeekFromNow),
-      "flight_type": "oneway",
-      "one_for_city": 1,
-      "sort": "date",
-      "vehicle_type": "aircraft"
-    };
-
-    if (onlyWeekends != null) {
-      requestDefinition["onlyWeekends"] = onlyWeekends;
-      requestDefinition["flight_type"] = "round";
-      requestDefinition["nights_in_dst_from"] = 0;
-      requestDefinition["nights_in_dst_to"] = 1;
-    }
-
-    if (sort != null) {
-      requestDefinition["sort"] = sort;
-    }
-
-    if (popularDestinations != null) {
-      // Destinacions format de api: A,B,C
-      String popularDestinationsReq =
-          popularDestinations.toString().replaceAll(" ", "");
-
-      popularDestinationsReq = popularDestinationsReq.substring(
-          1, popularDestinationsReq.length - 1);
-
-      requestDefinition["fly_to"] = popularDestinationsReq;
-    }
-
-    // Fem la peticio al backend
-    final response = await http.get(req('/v2/search', requestDefinition),
-        headers: {'apikey': "QEiR_0FuSG8t7MquzDjz3LrLPqXDTXsW"});
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON
-
-      var json = jsonDecode(response.body);
-      for (var data in json["data"]) {
-        bookingList.add(Booking()..fromJson(data));
-      }
-
-      return bookingList;
-    } else {
-      debugPrint("Error!! ${response.body}");
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-
-      throw Exception('Failed to load data');
-    }
-  }
-
-  // Obte totes les destinacions populars dels aeroports introduits.
-  // Automaticament elimina les repeticions.
-  Future<List<String>> bestDestinationsFromNearAirports(
-      List<String> nearAirports, int destLimit) async {
-    List<Future<List<String>>> popularDestinations = [];
-
-    // Per a cada aeroport busquem les destinacions més populars
-    for (var airport in nearAirports) {
-      popularDestinations.add(popularDestinationsFromPlace(airport, destLimit));
-    }
-
-    // Un cop s'han fet totes les crides, esperem a tenir la info.
-    List<String> result = [];
-    for (var future in popularDestinations) {
-      result.addAll(await future);
-    }
-
-    // Borrem els duplicats obtinguts.
-    return result.toSet().toList();
-  }
-
-  /*
-  Mateixa funcio sense optimitzar. Cada request de api es sincrona. Malament!
-
-  Future<List<String>> bestDestinationsFromNearAirports(List<String> nearAirports) async {
-    List<String> popularDestinations = [];
-    for(var airport in nearAirports){
-      List<String> newDestinations = await popularDestinationsFromPlace(airport);
-      popularDestinations.addAll(newDestinations);
-    }
-    return popularDestinations.toSet().toList();
-  }
-  */
-
-  // Retorna una llista amb les destinacions més populars
-  Future<List<String>> popularDestinationsFromPlace(
-      String airport, int destLimit) async {
-    List<String> result = [];
-    final response = await http.get(
-        req('/locations/topdestinations', {
-          "term": airport,
-          "limit": destLimit,
-          "locale": "en-US", //"es-ES",
-          "active_only": true
-        }),
-        headers: {'apikey': tequilaApiToken});
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON
-      var json = jsonDecode(response.body);
-      for (var loc in json["locations"]) {
-        result.add(loc["id"]);
-      }
-
-      return result;
-    } else {
-      debugPrint("Error!! ${response.body}");
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load data');
-    }
-  }
-
-  Future<List<String>> searchAirportsNearPos(Position pos, int limit) async {
-    List<String> result = [];
-    final response = await http.get(
-        req('/locations/radius', {
-          "lat": pos.latitude,
-          "lon": pos.longitude,
-          "radius": 250,
-          "location_types": "airport",
-          "limit": limit,
-          "locale": "en-US",
-          "active_only": true
-        }),
-        headers: {'apikey': tequilaApiToken});
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON
-      var json = jsonDecode(response.body);
-      for (var loc in json["locations"]) {
-        result.add(loc["id"]);
-      }
-
-      return result;
-    } else {
-      debugPrint("Error!! ${response.body}");
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load data');
-    }
-  }
 
 }
 
@@ -466,7 +235,9 @@ class Booking extends ChangeNotifier {
 
   bool isEnd;
 
-  void fromJson(Map<String, dynamic> json) {
+  Position position;
+
+  void fromJson(Map<String, dynamic> json, {Position position}) {
     // Booking booking = new Booking();
     this.origin = json["cityFrom"];
     this.shortOrigin = json["flyFrom"];
@@ -479,6 +250,8 @@ class Booking extends ChangeNotifier {
     this._departureTime = DateTime.parse(json["local_departure"]);
 
     this.price = json["price"];
+
+    this.position = position;
 
     this.fav = false;
     this.isEnd = false;

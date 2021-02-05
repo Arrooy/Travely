@@ -6,6 +6,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:provider/provider.dart';
+import 'package:travely/TrendPagePreview.dart';
 import 'package:travely/model/Booking.dart';
 import 'package:travely/ui_utils.dart';
 import 'package:travely/utils.dart';
@@ -176,7 +177,7 @@ class _ImageTileState extends State<ImageTile> {
       color: const Color(0x00000000),
       elevation: 3.0,
       child: GestureDetector(
-        onTap: () async{
+        onLongPress: () async{
           String username = Provider.of<UserManager>(context,listen: false).email.split('@')[0];
 
           var ref = FirebaseDatabase.instance.reference().child("$username/").child(widget.id);
@@ -185,6 +186,17 @@ class _ImageTileState extends State<ImageTile> {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if(mounted) setState(() {});
           });
+        },
+        onTap: (){
+          // Implementació de la preview desde bookings. Al final no s'afegeix a l'entrega.
+          // Booking bk = new Booking();
+          // bk.destination = widget.name;
+          // bk.price = int.parse(widget.price.substring(0,1));
+          // bk.image = widget.gridImage;
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => TrendPagePreview(bk)),
+          // );
         },
         child: Stack(children: [
 
@@ -204,7 +216,7 @@ class _ImageTileState extends State<ImageTile> {
                   ),
                 );
               } else if (snapshot.hasError) {
-                return futureError(snapshot.error);
+                return futureError(snapshot.error,size: 10);
               }
 
               return futureInlineLoading(true,size: 10);
