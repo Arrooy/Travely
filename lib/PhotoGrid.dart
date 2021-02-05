@@ -13,24 +13,6 @@ import 'package:travely/utils.dart';
 
 import 'model/UserManager.dart';
 
-/*
-OLD ADRIA
-  final int numElements = 20;
-  PhotoGrid(key1):super(key:key1);
-
-  @override
-  Widget build(BuildContext context) {
-    List<StaggeredTile> staggeredTiles = _generateRandomDistribution(numElements);
-    List<Widget> tiles = _generateRandomImages(staggeredTiles);
-    return Container(
-        color: Theme.of(context).primaryColor,
-        child: Column(children: [
-          Expanded(child: ImageTile(tiles, staggeredTiles)),
-        ]));
-  }
- */
-//TODO: Solicitar les fotos a google amb el size de la carta.
-
 class PhotoGrid extends StatelessWidget {
   PhotoGrid(key1):super(key:key1);
 
