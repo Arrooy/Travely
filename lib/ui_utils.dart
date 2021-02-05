@@ -1,8 +1,12 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:travely/authentication_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:travely/model/Booking.dart';
+
+import 'model/UserManager.dart';
 class TlyButton extends StatelessWidget {
   final String text;
   final Function onPressed;
@@ -104,11 +108,13 @@ Widget snackBarSimple(String message) {
   );
 }
 
-Widget futureInlineLoading() {
-  return Row(
+Widget futureInlineLoading( bool centered, {int size}) {
+  return centered ? SpinKitThreeBounce(
+    size: size == null ? 50.0 : size.toDouble(),
+    color: Colors.white) : Row(
     mainAxisSize: MainAxisSize.max,
     children: <Widget>[SpinKitThreeBounce(
-        size: 50,
+        size: size == null ? 50.0 : size.toDouble(),
         color: Colors.white,
       )],
   );
@@ -158,6 +164,7 @@ Widget futureError(error){
 
 
 Widget homeDrawer(BuildContext context){
+  String username = Provider.of<UserManager>(context,listen: false).email.split('@')[0];
  return  Drawer(
     elevation: 5,
     child: ListView(
@@ -184,17 +191,29 @@ Widget homeDrawer(BuildContext context){
             ])),
         ListTile(
           title: Text('Delete all bookings'),
-          onTap: () {},
+          onTap: () {
+            String username = Provider.of<UserManager>(context,listen: false).email.split('@')[0];
+            FirebaseDatabase.instance.reference().child("$username/").remove();
+            Navigator.pop(context);
+
+          },
         ),
         ListTile(
-          title: Text('LogOut'),
+          title: Text('LogOut from $username'),
           onTap: () {
             Provider.of<AuthenticationService>(context, listen: false)
                 .signOut();
+
             Navigator.pushReplacementNamed(context, '/', arguments: true);
           },
         ),
       ],
     ),
   );
+}
+
+
+
+void removeFromDatabase(String id){
+
 }

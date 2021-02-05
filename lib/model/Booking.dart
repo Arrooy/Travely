@@ -17,21 +17,7 @@ import 'LocationManager.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import 'package:http/http.dart' as http;
-import 'dart:io';
 import 'dart:convert';
-
-// TODO: POSAR UN BOOKING PER DEFECTE AL FINAL DE TOT QUE INDIQUI QUE JA NO HI HAN MES DADES!.
-// TODO: Agafar una imatge de google
-
-class Location {
-  List<String> _hashtags;
-  String _name;
-
-  Location(this._name, this._hashtags);
-
-  String get name => _name;
-  List<String> get hashtags => _hashtags;
-}
 
 // Te una matriu de bookings. Cada posicio de la llista
 // Correspon a un filtre (popular destinations, cheapest travels...)
@@ -44,6 +30,7 @@ class TrendingsModel extends ChangeNotifier {
   List<String> _options;
 
   PageController pageViewController;
+
 
   TrendingsModel() {
     _options = [
@@ -64,13 +51,27 @@ class TrendingsModel extends ChangeNotifier {
 
   int get filterSelected => _filterSelected;
 
-  void onHashtagPressed(context, index) async {
+  void onSwipe(DragEndDetails details,BuildContext context) {
+    double dx = details.velocity.pixelsPerSecond.dx;
+    if(dx > 250){
+      if(_filterSelected >= 1) onHashtagPressed(context, _filterSelected - 1,animate: false);
+    }else if(dx < 250){
+      if(_filterSelected < _bookings.length - 1) onHashtagPressed(context, _filterSelected + 1,animate: false);
+    }
+  }
+  void onHashtagPressed(context, index,{bool animate}) async {
     //Fem que la velocitat de l'animacio sigui constant!
-    if (_bookings[_filterSelected].currentPage != 0)
-      await pageViewController.animateToPage(0,
-          duration: Duration(
-              milliseconds: 500 * _bookings[_filterSelected].currentPage),
-          curve: Curves.easeInOut);
+    if (_bookings[_filterSelected].currentPage != 0){
+      if(animate == null || animate){
+        await pageViewController.animateToPage(0,
+            duration: Duration(
+                milliseconds: 1000 ),
+            curve: Curves.easeInOut);
+
+      }else{
+        pageViewController.jumpToPage(0);
+      }
+    }
 
     // Borrem totes les fotos (Menys les primeres 2) per no gastar tota la memoria del telef.
     // En un rato el garbage collector s'ocupará.
@@ -81,39 +82,44 @@ class TrendingsModel extends ChangeNotifier {
     }
 
     _filterSelected = index;
+    _bookings[_filterSelected]._currentPage = 0;
 
     _bookings[_filterSelected].list[0].requestHashtags();
     _bookings[_filterSelected].list[0].requestImage(context);
+
+    await _bookings[_filterSelected].list[0].updateFavFromFirebase(context);
     _bookings[_filterSelected].requestNextPageVariableData(context);
 
     notifyListeners();
   }
 
-  void newTrendPageIndex(int index, BuildContext context) {
+  Future<void> newTrendPageIndex(int index, BuildContext context) async{
     // Si arreivem a l'ulitim booking, no adelantis el index. Mostra el missatge.
     if (_bookings[_filterSelected].list.length > index) {
       _bookings[_filterSelected].currentPage = index;
 
       //Demanem el hastag i l'imatge de la seguent pagina.
       _bookings[_filterSelected].requestNextPageVariableData(context);
+
+      //No mostrem res de la nova pagina fins que no sapiguem si es fav o no.
+      await current.updateFavFromFirebase(context);
     }
   }
 
   void favButton(BuildContext ctx) {
-    Bookings bks = _bookings[_filterSelected];
-    Booking current = bks.list[bks.currentPage];
-
     String username = Provider.of<UserManager>(ctx,listen: false).email.split('@')[0];
-    var ref = FirebaseDatabase.instance.reference().child("${username}/").child(current.id);
+    var ref = FirebaseDatabase.instance.reference().child("$username/").child(current.id);
 
     if (current.fav) {
       // S'ha de treure de fav
-      _bookings.last.list.remove(current);
       ref.remove();
+
+      print("Disliked ${current.destination}");
     }else{
       // S'ha d'afegir
-      _bookings.last.list.add(current);
       ref.set(current.createSet());
+
+      print("liked ${current.destination}");
     }
 
     // Toogle del fav.
@@ -156,13 +162,13 @@ class TrendingsModel extends ChangeNotifier {
     Bookings lastMinute =
         await searchLastMinute(pos, nearAirports, resultLimit,ctx);
 
+
     _bookings.add(popularDest);
     _bookings.add(cheapestTravel);
     _bookings.add(weekendScape);
     _bookings.add(bestQuality);
     _bookings.add(shortFlight);
     _bookings.add(lastMinute);
-
     return true;
   }
 
@@ -402,6 +408,7 @@ class TrendingsModel extends ChangeNotifier {
       throw Exception('Failed to load data');
     }
   }
+
 }
 
 // Guarda els bookings d'un tipo de filtre.
@@ -413,9 +420,13 @@ class Bookings extends ChangeNotifier {
     _currentPage = 0;
     this.list[0].requestHashtags();
     this.list[0].requestImage(context);
+    this.list[0].updateFavFromFirebase(context);
     requestNextPageVariableData(context);
   }
-
+/*
+    String username = Provider.of<UserManager>(ctx,listen: false).email.split('@')[0];
+    var ref = FirebaseDatabase.instance.reference().child("$username/").child(current.id).once();
+    */
   Booking get current => list[_currentPage];
   int get currentPage => _currentPage;
 
@@ -431,6 +442,7 @@ class Bookings extends ChangeNotifier {
       this.list[nextIndex].requestImage(context);
     }
   }
+
 }
 
 // Defineix un booking.
@@ -482,6 +494,15 @@ class Booking extends ChangeNotifier {
     this.image = requestImageFromGoogle(this.destination,context);
   }
 
+  void updateFavFromFirebase(BuildContext context) async{
+
+    if(this.destination == null) return;
+    String username = Provider.of<UserManager>(context,listen: false).email.split('@')[0];
+    var ref = FirebaseDatabase.instance.reference().child("$username/").child(id);
+    var result = await ref.once();
+    this.fav = (result.value != null);
+  }
+
   void endOfData() {
     this.isEnd = true;
   }
@@ -494,7 +515,6 @@ class Booking extends ChangeNotifier {
   // Toogle del boto de like.
   void favButton() {
     this.fav = !this.fav;
-    notifyListeners();
   }
 
   // Retorna el set per a guardar-lo a firebase realtime db.
@@ -503,66 +523,10 @@ class Booking extends ChangeNotifier {
       'shortOrigin': shortOrigin,
       'shortDestination': shortDestination,
       'destination': destination,
-      'price': price,
-      'departureTime': _departureTime
+      'price': price
     };
   }
 
-  Future<List<String>> requestHashTags(String placeId) async {
-    var response = await http.get(tequilaBaseURL + "/locations/id?id=$placeId",
-        headers: {'apikey': tequilaApiToken});
-
-    if (response.statusCode == 200) {
-
-      // If the server did return a 200 OK response,
-      // then parse the JSON
-      var json = jsonDecode(response.body);
-      List<String> tags = [];
-
-      for (var tag in json["locations"][0]["tags"]) {
-        tags.add(tag["tag"]);
-      }
-
-      return tags;
-    } else {
-      // No posem tags.
-      return [""];
-    }
-  }
-
-  Future<Uint8List> requestImageFromGoogle(String destination, BuildContext context) async {
-
-    // Working places example.
-    var googlePlace = GooglePlace(googlePlacesApiToken);
-    print("Getting image from $destination");
-
-    var result = await googlePlace.search.getFindPlace(destination, InputType.TextQuery, fields: "photos");
-
-    if(result != null && result.status == "OK" && result.candidates != null && result.candidates.length >= 1 && result.candidates.first.photos != null && result.candidates.first.photos.length >= 1){
-      // Tenim una foto de google places.
-      return googlePlace.photos.get(result.candidates.first.photos.first.photoReference,getPhoneHeight(context).toInt(),getPhoneWidth(context).toInt());
-    }else{
-      // Fallback ->  agafem una foto de pexels.
-
-      return http.get(
-          'https://api.pexels.com/v1/search?query=$destination&per_page=1&orientation=portrait&size=medium',
-          headers: {HttpHeaders.authorizationHeader: pexelApiToken}).then<Uint8List>((response) async{
-
-            if (response.statusCode == 200) {
-            // If the server did return a 200 OK response,
-            // then parse the JSON
-            var json = jsonDecode(response.body);
-            return (await NetworkAssetBundle(Uri.parse(json["photos"][0]["src"]["portrait"])).load("")).buffer.asUint8List();
-          }else{
-            return Future.error("We have no fotos of $destination");
-          }
-
-      }).catchError((error){
-        print("Error! $error");
-        return Future.error("We have no fotos of $destination");
-      });
-    }
-  }
 
   @override
   String toString() {

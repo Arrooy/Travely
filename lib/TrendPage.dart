@@ -115,7 +115,7 @@ class TrendPage extends StatelessWidget {
                                 } else if (snapshot.hasError) {
                                   return futureError(snapshot.error);
                                 }
-                                return futureInlineLoading();
+                                return futureInlineLoading(false);
                               });
                         },),
 

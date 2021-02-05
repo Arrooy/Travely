@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:provider/provider.dart';
+import 'package:travely/model/Booking.dart';
+import 'package:travely/ui_utils.dart';
+import 'package:travely/utils.dart';
 
 import 'model/UserManager.dart';
 
@@ -23,12 +28,15 @@ OLD ADRIA
         ]));
   }
  */
-
+//TODO: Solicitar les fotos a google amb el size de la carta.
 
 class PhotoGrid extends StatelessWidget {
+  PhotoGrid(key1):super(key:key1);
+
   @override
   Widget build(BuildContext context) {
     String username = Provider.of<UserManager>(context, listen: false).email.split('@')[0];
+
     return StreamBuilder(
       stream: FirebaseDatabase.instance.reference().child('${username}/').onValue,
       builder: (context, snap) {
@@ -36,13 +44,19 @@ class PhotoGrid extends StatelessWidget {
           DataSnapshot snapshot = snap.data.snapshot;
 
           List<_TileInfo> _list = List<_TileInfo>();
+
+
           Map<String, dynamic> _rawdata = Map<String, dynamic>.from(snapshot.value);
-          _rawdata.forEach((key, value) =>
+
+          _rawdata.forEach((key, value) {
+
               _list.add(_TileInfo(
                   "${value['shortOrigin']}-${value['shortDestination']}",
+                  key,
                   "${value['price']}€",
-                  value['image']
-              )));
+                  requestImageFromGoogle(value['destination'], context)
+              ));
+          });
 
           List<StaggeredTile> staggeredTiles = _generateRandomDistribution(_list.length);
           List<Widget> tiles = _generateRandomImages(staggeredTiles, _list);
@@ -50,7 +64,7 @@ class PhotoGrid extends StatelessWidget {
           return snap.data.snapshot.value == null ?
           SizedBox()
               :
-          ImageTile(tiles, staggeredTiles);
+          PhotoGridContent(tiles, staggeredTiles);
         } else return Center(
             child: Text(
               'You have no favourite plans yet!',
@@ -68,11 +82,12 @@ class PhotoGrid extends StatelessWidget {
     for (int i = 0; i < staggeredTiles.length; i++) {
       StaggeredTile st = staggeredTiles[i];
       int type = (st.crossAxisCellCount > 1) ? 3 : ((st.mainAxisCellCount > 1) ? 2 : 1);
-      tiles.add(_ImageTile(
+      tiles.add(ImageTile(
           gridImage: info[i].image,
           type: type,
           name: info[i].name,
-          price: info[i].price
+          price: info[i].price,
+          id: info[i].id
       ));
     }
     return tiles;
@@ -123,10 +138,10 @@ class PhotoGrid extends StatelessWidget {
   }
 }
 
-class ImageTile extends StatelessWidget {
+class PhotoGridContent extends StatelessWidget {
   final List<StaggeredTile> _staggeredTiles;
   final List<Widget> _tiles;
-  const ImageTile(this._tiles, this._staggeredTiles) : super();
+  const PhotoGridContent(this._tiles, this._staggeredTiles) : super();
 
   @override
   Widget build(BuildContext context) {
@@ -142,31 +157,58 @@ class ImageTile extends StatelessWidget {
   }
 }
 
-class _ImageTile extends StatelessWidget {
+class ImageTile extends StatefulWidget {
   final gridImage;
   final int type;
   final String name;
   final String price;
-  const _ImageTile({this.gridImage, this.type, this.name, this.price});
+  final String id;
+  const ImageTile({this.gridImage, this.type, this.name, this.price, this.id});
 
   @override
+  _ImageTileState createState() => _ImageTileState();
+}
+
+class _ImageTileState extends State<ImageTile> {
+  @override
   Widget build(BuildContext context) {
-    return new Card(
+    return Card(
       color: const Color(0x00000000),
       elevation: 3.0,
       child: GestureDetector(
-        onTap: () {
-          print("hello");
+        onTap: () async{
+          String username = Provider.of<UserManager>(context,listen: false).email.split('@')[0];
+
+          var ref = FirebaseDatabase.instance.reference().child("$username/").child(widget.id);
+          await ref.remove();
+
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if(mounted) setState(() {});
+          });
         },
         child: Stack(children: [
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: NetworkImage(gridImage),
-                fit: BoxFit.cover,
-              ),
-              borderRadius: BorderRadius.all(const Radius.circular(10.0)),
-            ),
+
+
+                 FutureBuilder<Uint8List>(
+            future: widget.gridImage,
+            builder: (context,snapshot){
+
+              if (snapshot.hasData && snapshot.connectionState == ConnectionState.done){
+                return  Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: MemoryImage(snapshot.data),
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: BorderRadius.all(const Radius.circular(10.0)),
+                  ),
+                );
+              } else if (snapshot.hasError) {
+                return futureError(snapshot.error);
+              }
+
+              return futureInlineLoading(true,size: 10);
+            }
           ),
          Container(
               decoration: BoxDecoration(
@@ -174,7 +216,7 @@ class _ImageTile extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    (this.type != 3) ? Color.fromARGB(170, 0, 0, 0) : Colors.transparent,
+                    (this.widget.type != 3) ? Color.fromARGB(170, 0, 0, 0) : Colors.transparent,
                     Colors.transparent,
                     Color.fromARGB(170, 0, 0, 0)
                   ],
@@ -184,21 +226,21 @@ class _ImageTile extends StatelessWidget {
             ),
          // ),
           Align(
-            alignment: (this.type == 3) ? Alignment.bottomLeft : Alignment.topLeft,
+            alignment: (this.widget.type == 3) ? Alignment.bottomLeft : Alignment.topLeft,
             child: Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  name,
-                  style: TextStyle(fontSize: (this.type == 3) ? 17 : 13),
+                  widget.name,
+                  style: TextStyle(fontSize: (this.widget.type == 3) ? 17 : 13),
                 )),
           ),
           Align(
-            alignment: (this.type == 2) ? Alignment.bottomLeft : Alignment.bottomRight,
+            alignment: (this.widget.type == 2) ? Alignment.bottomLeft : Alignment.bottomRight,
             child: Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  price,
-                  style: TextStyle(fontSize: (this.type == 3) ? 17 : 15),
+                  widget.price,
+                  style: TextStyle(fontSize: (this.widget.type == 3) ? 17 : 15),
                 )),
           ),
         ]),
@@ -209,7 +251,10 @@ class _ImageTile extends StatelessWidget {
 
 class _TileInfo {
   final String name;
+  final String id;
   final String price;
-  final String image;
-  _TileInfo(this.name, this.price, this.image);
+//  final String imageName;
+  Future<Uint8List> image;
+
+  _TileInfo(this.name,this.id, this.price, this.image);
 }

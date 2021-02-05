@@ -31,6 +31,49 @@ class _TrendingTabState extends State<TrendingTab> {
 
   @override
   Widget build(BuildContext context) {
+    
+    return GestureDetector(
+      onHorizontalDragEnd: (details)=>Provider.of<TrendingsModel>(context, listen: false).onSwipe(details,context),
+      child: FutureBuilder <bool>(
+          future: _trendingModelReady,
+          builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+            if (snapshot.hasData && snapshot.data) {
+              return Stack(children: [
+                PageView.builder(
+                  controller: Provider
+                      .of<TrendingsModel>(context, listen: false)
+                      .pageViewController,
+                  onPageChanged: (aa)=>print("OnPageChanged is $aa"),
+                  scrollDirection: Axis.vertical,
+                  itemBuilder: (context, position) {
+                    print("Page view build is $position");
+                    Provider
+                        .of<TrendingsModel>(context, listen: false)
+                        .newTrendPageIndex(position,context);
+                      //Pintem el trendPage
+                        return TrendPage();
+                  },
+                ),
+                HashtagBar(Provider
+                    .of<TrendingsModel>(context, listen: false)
+                    .options, false),
+              ]);
+            } else
+            if (snapshot.hasError || (snapshot.data != null && !snapshot.data)) {
+              return futureError(snapshot.error);
+            }
+
+            return futureLoading('Awaiting destinations...');
+          }),
+    );
+  }
+}
+
+/*
+OLD BuildContext
+
+  @override
+  Widget build(BuildContext context) {
 
     return FutureBuilder <bool>(
         future: _trendingModelReady,
@@ -64,5 +107,4 @@ class _TrendingTabState extends State<TrendingTab> {
           return futureLoading('Awaiting destinations...');
         });
   }
-
-}
+ */
