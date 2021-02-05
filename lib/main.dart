@@ -71,7 +71,7 @@ class LogInScreen extends StatefulWidget {
 }
 
 class _LogInScreenState extends State<LogInScreen> {
-  BackgroundVideo backgroundVideo = BackgroundVideo("summer travel barcelona");
+  BackgroundVideo backgroundVideo = BackgroundVideo("summer travel barcelona traveling");
 
   @override
   Widget build(BuildContext context) {
